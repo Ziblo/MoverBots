@@ -1,0 +1,1 @@
+We're probably gonna make a serial interface for debugging and testing
