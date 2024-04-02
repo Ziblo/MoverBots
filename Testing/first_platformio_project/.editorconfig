@@ -1,0 +1,18 @@
+# Editor configuration for C programming language
+
+# Top-most EditorConfig file marker
+root = true
+
+# Set default charset to UTF-8
+[*]
+charset = utf-8
+
+# Set tab size to 4 spaces
+[*.c]
+indent_style = space
+indent_size = 4
+indent_brace_style = k&r
+
+# Set line endings to LF (Unix-style)
+[*]
+end_of_line = lf
