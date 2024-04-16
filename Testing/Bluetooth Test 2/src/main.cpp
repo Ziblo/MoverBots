@@ -1,80 +1,30 @@
-/**********************************************************************
-  Filename    : BLE_USART
-  Description : Esp32 communicates with the phone by BLE and sends incoming data via a serial port
-  Auther      : www.freenove.com
-  Modification: 2022/10/26
-**********************************************************************/
+//This example code is in the Public Domain (or CC0 licensed, at your option.)
+//By Evandro Copercini - 2018
+//
+//This example creates a bridge between Serial and Classical Bluetooth (SPP)
+//and also demonstrate that SerialBT have the same functionalities of a normal Serial
+
 #include <Arduino.h>
-#include "BLEDevice.h"
-#include "BLEServer.h"
-#include "BLEUtils.h"
-#include "BLE2902.h"
-#include "String.h"
- 
-BLECharacteristic *pCharacteristic;
-bool deviceConnected = false;
-uint8_t txValue = 0;
-long lastMsg = 0;
-String rxload="Test\n";
- 
-#define SERVICE_UUID           "6E400001-B5A3-F393-E0A9-E50E24DCCA9E" 
-#define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
-#define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
- 
-class MyServerCallbacks: public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer) {
-      deviceConnected = true;
-    };
-    void onDisconnect(BLEServer* pServer) {
-      deviceConnected = false;
-    }
-};
- 
-class MyCallbacks: public BLECharacteristicCallbacks {
-    void onWrite(BLECharacteristic *pCharacteristic) {
-      std::string rxValue = pCharacteristic->getValue();
-      if (rxValue.length() > 0) {
-        rxload="";
-        for (int i = 0; i < rxValue.length(); i++){
-          rxload +=(char)rxValue[i];
-        }
-      }
-    }
-};
- 
-void setupBLE(String BLEName){
-  const char *ble_name=BLEName.c_str();
-  BLEDevice::init(ble_name);
-  BLEServer *pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new MyServerCallbacks());
-  BLEService *pService = pServer->createService(SERVICE_UUID); 
-  pCharacteristic= pService->createCharacteristic(CHARACTERISTIC_UUID_TX,BLECharacteristic::PROPERTY_NOTIFY);
-  pCharacteristic->addDescriptor(new BLE2902());
-  BLECharacteristic *pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_RX,BLECharacteristic::PROPERTY_WRITE);
-  pCharacteristic->setCallbacks(new MyCallbacks()); 
-  pService->start();
-  pServer->getAdvertising()->start();
-  Serial.println("Waiting a client connection to notify...");
-}
+#include "BluetoothSerial.h"
+
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
+
+BluetoothSerial SerialBT;
 
 void setup() {
   Serial.begin(115200);
-  setupBLE("KIM SMELLS BAD! >:C");
+  SerialBT.begin("ESP32test"); //Bluetooth device name
+  Serial.println("The device started, now you can pair it with bluetooth!");
 }
- 
+
 void loop() {
-  long now = millis();
-  if (now - lastMsg > 100) {
-    if (deviceConnected&&rxload.length()>0) {
-        Serial.println(rxload);
-        rxload="";
-    }
-    if(Serial.available()>0){
-        String str=Serial.readString();
-        const char *newValue=str.c_str();
-        pCharacteristic->setValue(newValue);
-        pCharacteristic->notify();
-    }
-    lastMsg = now;
+  if (Serial.available()) {
+    SerialBT.write(Serial.read());
   }
+  if (SerialBT.available()) {
+    Serial.write(SerialBT.read());
+  }
+  delay(20);
 }
