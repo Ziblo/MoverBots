@@ -41,6 +41,7 @@ public:
 
 class SPIClass
 {
+
 private:
     int8_t _spi_num;
     spi_t * _spi;
@@ -90,6 +91,8 @@ public:
 
     spi_t * bus(){ return _spi; }
     int8_t pinSS() { return _ss; }
+    void setup();
+    void loop();
 };
 
 extern SPIClass SPI;
