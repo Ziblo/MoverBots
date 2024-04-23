@@ -24,18 +24,13 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include "custom_UUIDs.h"
 
 BLEServer* pServer = NULL;
-BLECharacteristic* pCharacteristic = NULL;
+BLECharacteristic* pCharacteristics[NUM_OF_CHARACTERISTICS];
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
-uint32_t value = 0;
-
-// See the following for generating UUIDs:
-// https://www.uuidgenerator.net/
-
-#define SERVICE_UUID        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
-#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+uint32_t values[NUM_OF_CHARACTERISTICS] = {0}; //all testing variables start at 0
 
 
 class MyServerCallbacks: public BLEServerCallbacks {
@@ -64,20 +59,23 @@ void setup() {
   // Create the BLE Service
   BLEService *pService = pServer->createService(SERVICE_UUID);
 
-  // Create a BLE Characteristic
-  pCharacteristic = pService->createCharacteristic(
-                      CHARACTERISTIC_UUID,
-                      BLECharacteristic::PROPERTY_NOTIFY
-                    );
+  // Create all the BLE Characteristics
+  for (int i=0; i<NUM_OF_CHARACTERISTICS; i++){
+    pCharacteristics[i] = pService->createCharacteristic(
+                      characteristicUUIDs[i],
+                      BLECharacteristic::PROPERTY_NOTIFY);
+  }
 
-  // Create a BLE Descriptor
-  BLEDescriptor* pDescriptor; //Characteristic User Description
-  pDescriptor = new BLEDescriptor((uint16_t)0x2901); //descriptor for a Client Characteristic Configuration
-  pDescriptor->setValue("A number counting up forever!");
-  pCharacteristic->addDescriptor(pDescriptor);
-  BLE2902* p2902 = new BLE2902(); //pointer to a generic descriptor for a Client Characteristic Configuration
-  p2902->setNotifications(true);
-  pCharacteristic->addDescriptor(p2902);
+  // Create all the BLE Descriptors
+  BLEDescriptor* pDescriptors[NUM_OF_CHARACTERISTICS]; //Characteristic User Descriptions
+  for (int i=0; i<NUM_OF_CHARACTERISTICS; i++){
+    pDescriptors[i] = new BLEDescriptor((uint16_t)0x2901); //descriptor for a Client Characteristic Configuration
+    pDescriptors[i]->setValue(characteristicDescriptions[i]);
+    pCharacteristics[i]->addDescriptor(pDescriptors[i]);
+    BLE2902* p2902 = new BLE2902(); //pointer to a generic descriptor for a Client Characteristic Configuration
+    p2902->setNotifications(true);
+    pCharacteristics[i]->addDescriptor(p2902);
+  }
 
   // Start the service
   pService->start();
@@ -94,11 +92,16 @@ void setup() {
 void loop() {
     // notify changed value
     if (deviceConnected) {
-        pCharacteristic->setValue(value);
-        pCharacteristic->notify();
-        Serial.print("notify ");
-        Serial.println(value);
-        value++;
+        //update the characteristics
+        for (int i=0; i<NUM_OF_CHARACTERISTICS; i++){
+          pCharacteristics[0]->setValue(values[i]);
+          pCharacteristics[0]->notify();
+          Serial.print("sending in characteristic ");
+          Serial.print(i);
+          Serial.println(": ");
+          Serial.println(values[i]);
+          values[i] += i+1; //count up by different amounts to differentiate them when debugging
+        }
         delay(250); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
     }
     // disconnecting

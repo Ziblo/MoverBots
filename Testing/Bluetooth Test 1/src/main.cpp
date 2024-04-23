@@ -10,12 +10,7 @@
 #include "custom_UUIDs.h"
 
 // The remote service we wish to connect to.
-//#define SERVICE_UUID        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
-// The characteristic of the remote service we are interested in.
-//#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
-
 static BLEUUID serviceUUID(SERVICE_UUID);
-//static BLEUUID    charUUID(CHARACTERISTIC_UUID);
 
 static boolean doConnect = false;
 static boolean connected = false;
