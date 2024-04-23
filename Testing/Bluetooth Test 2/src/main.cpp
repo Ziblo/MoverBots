@@ -73,7 +73,7 @@ void setup() {
   // Create a BLE Descriptor
   BLEDescriptor* pDescriptor; //Characteristic User Description
   pDescriptor = new BLEDescriptor((uint16_t)0x2901); //descriptor for a Client Characteristic Configuration
-  pDescriptor->setValue("A very interesting variable");
+  pDescriptor->setValue("A number counting up forever!");
   pCharacteristic->addDescriptor(pDescriptor);
   BLE2902* p2902 = new BLE2902(); //pointer to a generic descriptor for a Client Characteristic Configuration
   p2902->setNotifications(true);
@@ -85,7 +85,7 @@ void setup() {
   // Start advertising
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->setScanResponse(false);
+  pAdvertising->setScanResponse(true); //needs this to be true to show service uuid in advertisement
   pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
   BLEDevice::startAdvertising();
   Serial.println("Waiting a client connection to notify...");
@@ -97,7 +97,7 @@ void loop() {
         pCharacteristic->setValue(value);
         pCharacteristic->notify();
         Serial.print("notify ");
-        Serial.println(value, HEX);
+        Serial.println(value);
         value++;
         delay(250); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
     }
