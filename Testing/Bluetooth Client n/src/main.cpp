@@ -37,7 +37,7 @@ static void notifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, ui
   }
   //print info
   Serial.print("Notify callback for characteristic ");
-  Serial.print(characteristicUUIDs[i]);
+  Serial.print(characteristicDescriptions[i]);
   Serial.print(" of data length ");
   Serial.print(length);
   Serial.print(" Data: ");
@@ -81,6 +81,7 @@ void PrintCharacteristic(uint8_t* pData, size_t length, CharacteristicType dataT
 
 class MyClientCallback : public BLEClientCallbacks {
   void onConnect(BLEClient* pclient) {
+    //Don't stop advertising!
   }
   void onDisconnect(BLEClient* pclient) {
     connected = false;

@@ -19,9 +19,9 @@ constexpr const char* characteristicUUIDs[] = {
 
 // Define an array of characteristic descriptions
 constexpr const char* characteristicDescriptions[] = {
-    "counting integer",                     // Description for Characteristic 0
-    "Kim Ngo variable",                     // Description for Characteristic 1
-    "Symbiosis number"                      // Description for Characteristic 2
+    "counting by 1s",                     // Description for Characteristic 0
+    "multiply by 2s",                     // Description for Characteristic 1
+    "String test"                      // Description for Characteristic 2
 };
 
 enum CharacteristicType {
@@ -33,7 +33,7 @@ enum CharacteristicType {
 constexpr CharacteristicType characteristicDataTypes[] = {
     INTEGER,  // Data type for Characteristic 0
     INTEGER,   // Data type for Characteristic 1
-    INTEGER   // Data type for Characteristic 2
+    STRING   // Data type for Characteristic 2
 };
 
 #endif // CUSTOM_UUIDS_H
