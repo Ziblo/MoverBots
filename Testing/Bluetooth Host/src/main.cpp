@@ -30,7 +30,6 @@ BLEServer* pServer = NULL;
 BLECharacteristic* pCharacteristics[NUM_OF_CHARACTERISTICS];
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
-uint32_t values[NUM_OF_CHARACTERISTICS] = {0}; //all testing variables start at 0
 
 
 class MyServerCallbacks: public BLEServerCallbacks {
@@ -91,17 +90,33 @@ void setup() {
 
 void loop() {
     // notify changed value
+    static uint32_t value0 = 0;
+    static uint32_t value1 = 1;
+    char valueString[100]; //I haven't had any issues sending 77 characters over BLE
     if (deviceConnected) {
         //update the characteristics
-        for (int i=0; i<NUM_OF_CHARACTERISTICS; i++){
-          pCharacteristics[0]->setValue(values[i]);
-          pCharacteristics[0]->notify();
-          Serial.print("sending in characteristic ");
-          Serial.print(i);
-          Serial.println(": ");
-          Serial.println(values[i]);
-          values[i] += i+1; //count up by different amounts to differentiate them when debugging
-        }
+
+        sprintf(valueString, "num0: %i, num1: %i. The sly brown fox jumped over the lazy dog. 0123456789", value0, value1);
+
+        pCharacteristics[0]->setValue(value0);
+        pCharacteristics[0]->notify();
+        Serial.print("sending in characteristic 0: ");
+        Serial.println(value0);
+
+        pCharacteristics[1]->setValue(value1);
+        pCharacteristics[1]->notify();
+        Serial.print("sending in characteristic 1: ");
+        Serial.println(value1);
+
+        pCharacteristics[2]->setValue(valueString);
+        pCharacteristics[2]->notify();
+        Serial.print("sending in characteristic 2: ");
+        Serial.println(valueString);
+
+        value0 += 1; //count by 1s
+        value1 *= 2; //multiply by 2s
+        if (!value1) value1 = 1;
+        
         delay(250); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
     }
     // disconnecting

@@ -1,46 +1,20 @@
 // includes
 #include <HardwareSerial.h>
-#include <SoftwareSerial.h>
 #include <ODriveArduino.h>
 // Printing with stream operator helper functions
 template<class T> inline Print& operator <<(Print &obj,     T arg) { obj.print(arg);    return obj; }
 template<>        inline Print& operator <<(Print &obj, float arg) { obj.print(arg, 4); return obj; }
 
-
-////////////////////////////////
-// Set up serial pins to the ODrive
-////////////////////////////////
-
-// Below are some sample configurations.
-// You can comment out the default Teensy one and uncomment the one you wish to use.
-// You can of course use something different if you like
-// Don't forget to also connect ODrive GND to Arduino GND.
-
-// Teensy 3 and 4 (all versions) - Serial1
-// pin 0: RX - connect to ODrive TX
-// pin 1: TX - connect to ODrive RX
-// See https://www.pjrc.com/teensy/td_uart.html for other options on Teensy
-HardwareSerial& odrive_serial = Serial1;
-
-// Arduino Mega or Due - Serial1
-// pin 19: RX - connect to ODrive TX
-// pin 18: TX - connect to ODrive RX
-// See https://www.arduino.cc/reference/en/language/functions/communication/serial/ for other options
-// HardwareSerial& odrive_serial = Serial1;
-
-// Arduino without spare serial ports (such as Arduino UNO) have to use software serial.
-// Note that this is implemented poorly and can lead to wrong data sent or read.
-// pin 8: RX - connect to ODrive TX
-// pin 9: TX - connect to ODrive RX
-// SoftwareSerial odrive_serial(8, 9);
-
+// ESP32-S3
+HardwareSerial& odrive_serial1 = Serial1;//pin 16 & 15
+HardwareSerial& odrive_serial2 = Serial2;//pin 19 & 20
 
 // ODrive object
-ODriveArduino odrive(odrive_serial);
+ODriveArduino odrive(odrive_serial1);
 
 void setup() {
   // ODrive uses 115200 baud
-  odrive_serial.begin(115200);
+  odrive_serial1.begin(115200);
 
   // Serial to PC
   Serial.begin(115200);
@@ -53,8 +27,8 @@ void setup() {
   // You can of course set them different if you want.
   // See the documentation or play around in odrivetool to see the available parameters
   for (int axis = 0; axis < 2; ++axis) {
-    odrive_serial << "w axis" << axis << ".controller.config.vel_limit " << 10.0f << '\n';
-    odrive_serial << "w axis" << axis << ".motor.config.current_lim " << 11.0f << '\n';
+    odrive_serial1 << "w axis" << axis << ".controller.config.vel_limit " << 10.0f << '\n';
+    odrive_serial1 << "w axis" << axis << ".motor.config.current_lim " << 11.0f << '\n';
     // This ends up writing something like "w axis0.motor.config.current_lim 10.0\n"
   }
 
@@ -69,7 +43,7 @@ void loop() {
 
   if (Serial.available()) {
     char c = Serial.read();
-
+    Serial << c << '\n';
     // Run calibration sequence
     if (c == '0' || c == '1') {
       int motornum = c-'0';
@@ -102,7 +76,7 @@ void loop() {
 
     // Read bus voltage
     if (c == 'b') {
-      odrive_serial << "r vbus_voltage\n";
+      odrive_serial1 << "r vbus_voltage\n";
       Serial << "Vbus voltage: " << odrive.readFloat() << '\n';
     }
 
