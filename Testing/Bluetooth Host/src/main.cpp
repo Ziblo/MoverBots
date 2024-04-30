@@ -92,11 +92,11 @@ void loop() {
     // notify changed value
     static uint32_t value0 = 0;
     static uint32_t value1 = 1;
-    char valueString[100]; //I haven't had any issues sending 77 characters over BLE
+    std::string valueString; //I haven't had any issues sending 77 characters over BLE
     if (deviceConnected) {
         //update the characteristics
 
-        sprintf(valueString, "num0: %i, num1: %i. The sly brown fox jumped over the lazy dog. 0123456789", value0, value1);
+        valueString = "num0: " + std::to_string(value0) + ", num1: " + std::to_string(value1) + ". The sly brown fox jumped over the lazy dog. 0123456789";
 
         pCharacteristics[0]->setValue(value0);
         pCharacteristics[0]->notify();
@@ -111,7 +111,7 @@ void loop() {
         pCharacteristics[2]->setValue(valueString);
         pCharacteristics[2]->notify();
         Serial.print("sending in characteristic 2: ");
-        Serial.println(valueString);
+        Serial.println(valueString.c_str());
 
         value0 += 1; //count by 1s
         value1 *= 2; //multiply by 2s
