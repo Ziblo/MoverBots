@@ -24,4 +24,16 @@ constexpr const char* characteristicDescriptions[] = {
     "Symbiosis number"                      // Description for Characteristic 2
 };
 
+enum CharacteristicType {
+    INTEGER,
+    STRING
+};
+
+// Define an array of data types
+constexpr CharacteristicType characteristicDataTypes[] = {
+    INTEGER,  // Data type for Characteristic 0
+    INTEGER,   // Data type for Characteristic 1
+    INTEGER   // Data type for Characteristic 2
+};
+
 #endif // CUSTOM_UUIDS_H

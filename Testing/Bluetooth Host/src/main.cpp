@@ -94,11 +94,11 @@ void loop() {
     if (deviceConnected) {
         //update the characteristics
         for (int i=0; i<NUM_OF_CHARACTERISTICS; i++){
-          pCharacteristics[0]->setValue(values[i]);
-          pCharacteristics[0]->notify();
+          pCharacteristics[i]->setValue(values[i]);
+          pCharacteristics[i]->notify();
           Serial.print("sending in characteristic ");
           Serial.print(i);
-          Serial.println(": ");
+          Serial.print(": ");
           Serial.println(values[i]);
           values[i] += i+1; //count up by different amounts to differentiate them when debugging
         }

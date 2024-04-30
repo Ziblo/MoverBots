@@ -17,23 +17,66 @@ static boolean connected = false;
 static boolean doScan = false;
 static BLEAdvertisedDevice* myDevice;
 
-static void notifyCallback( //called everytime the server does a notify to its clients
-  BLERemoteCharacteristic* pBLERemoteCharacteristic,
-  uint8_t* pData,
-  size_t length,
-  bool isNotify) {
-    Serial.print("Notify callback for characteristic ");
-    Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
-    Serial.print(" of data length ");
-    Serial.print(length);
-    //convert to uint32
-    uint32_t counter = pData[0]; //start at lsb
-    for (int i=1; i<length; i++){
-      //shift bytes
-      counter = counter | (pData[i]<<i*8);
+//function prototypes
+bool connectCharacteristic(BLERemoteService* pRemoteService, BLEUUID local_characteristic_UUID);
+void PrintCharacteristic(uint8_t* pData, size_t length, CharacteristicType dataType);
+
+static void notifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify){
+  //called everytime the server does a notify to its clients
+  int i; //get the index
+  bool found_characteristic = false;
+  for (i=0; i<NUM_OF_CHARACTERISTICS; i++){
+    if (pBLERemoteCharacteristic->getUUID().toString() == characteristicUUIDs[i]){
+      found_characteristic = true;
+      break;
     }
-    Serial.print( "data: ");
-    Serial.println(counter);
+  }
+  if (!found_characteristic){
+    Serial.print("Notify callback was not matched to a known characteristicUUID");
+    return;
+  }
+  //print info
+  Serial.print("Notify callback for characteristic ");
+  Serial.print(characteristicUUIDs[i]);
+  Serial.print(" of data length ");
+  Serial.print(length);
+  Serial.print(" Data: ");
+  switch (i){
+    case 0: //characteristicUUIDs[0]:
+      break;
+    case 1: //characteristicUUIDs[1]:
+      break;
+    case 2: //characteristicUUIDs[2]:
+      break;
+    default: //pBLERemoteCharacteristic doesn't match my characteristicUUIDs
+      break;
+  }
+  PrintCharacteristic(pData, length, characteristicDataTypes[i]);
+}
+
+void PrintCharacteristic(uint8_t* pData, size_t length, CharacteristicType dataType){
+  uint32_t number;
+  switch (dataType){
+    case INTEGER:
+      //print as uint32
+      number = pData[0]; //start at lsb
+      for (int i=1; i<length; i++){
+        //shift bytes
+        number = number | (pData[i]<<i*8);
+      }
+      Serial.println(number);
+      break;
+    case STRING:
+      //print as string
+      for (int i=0; i<length; i++){
+        Serial.print((char)pData[i]);
+      }
+      Serial.print("\n");
+      break;
+    default:
+      Serial.println("Type is not recognised.");
+      break;
+  }
 }
 
 class MyClientCallback : public BLEClientCallbacks {
@@ -68,11 +111,16 @@ bool connectToServer() {
     return false;
   }
   Serial.println(" - Found our service");
-
   connected = true;
+
   //check for expected characteristics
   for (int i=0; i<NUM_OF_CHARACTERISTICS && connected; i++){
-    connected = connectCharacteristic(pRemoteService, characteristic_UUIDs[i])
+    connected = connectCharacteristic(pRemoteService, BLEUUID(characteristicUUIDs[i]));
+    if (!connected){
+      pClient->disconnect();
+      Serial.println("At least one characteristic UUID not found");
+      return false;
+    }
   }
   return true;
 }
