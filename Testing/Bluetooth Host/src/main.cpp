@@ -61,7 +61,7 @@ void setup() {
   // Create all the BLE Characteristics
   for (int i=0; i<NUM_OF_CHARACTERISTICS; i++){
     pCharacteristics[i] = pService->createCharacteristic(
-                      characteristicUUIDs[i],
+                      customCharacteristics[i].UUID,
                       BLECharacteristic::PROPERTY_NOTIFY);
   }
 
@@ -69,7 +69,7 @@ void setup() {
   BLEDescriptor* pDescriptors[NUM_OF_CHARACTERISTICS]; //Characteristic User Descriptions
   for (int i=0; i<NUM_OF_CHARACTERISTICS; i++){
     pDescriptors[i] = new BLEDescriptor((uint16_t)0x2901); //descriptor for a Client Characteristic Configuration
-    pDescriptors[i]->setValue(characteristicDescriptions[i]);
+    pDescriptors[i]->setValue(customCharacteristics[i].description);
     pCharacteristics[i]->addDescriptor(pDescriptors[i]);
     BLE2902* p2902 = new BLE2902(); //pointer to a generic descriptor for a Client Characteristic Configuration
     p2902->setNotifications(true);

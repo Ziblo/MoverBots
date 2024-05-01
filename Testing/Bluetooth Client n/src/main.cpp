@@ -26,7 +26,7 @@ static void notifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, ui
   int i; //get the index
   bool found_characteristic = false;
   for (i=0; i<NUM_OF_CHARACTERISTICS; i++){
-    if (pBLERemoteCharacteristic->getUUID().toString() == characteristicUUIDs[i]){
+    if (pBLERemoteCharacteristic->getUUID().toString() == customCharacteristics[i].UUID){
       found_characteristic = true;
       break;
     }
@@ -37,7 +37,7 @@ static void notifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, ui
   }
   //print info
   Serial.print("Notify callback for characteristic ");
-  Serial.print(characteristicDescriptions[i]);
+  Serial.print(customCharacteristics[i].description);
   Serial.print(" of data length ");
   Serial.print(length);
   Serial.print(" Data: ");
@@ -51,7 +51,7 @@ static void notifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, ui
     default: //pBLERemoteCharacteristic doesn't match my characteristicUUIDs
       break;
   }
-  PrintCharacteristic(pData, length, characteristicDataTypes[i]);
+  PrintCharacteristic(pData, length, customCharacteristics[i].type);
 }
 
 void PrintCharacteristic(uint8_t* pData, size_t length, CharacteristicType dataType){
@@ -116,7 +116,7 @@ bool connectToServer() {
 
   //check for expected characteristics
   for (int i=0; i<NUM_OF_CHARACTERISTICS && connected; i++){
-    connected = connectCharacteristic(pRemoteService, BLEUUID(characteristicUUIDs[i]));
+    connected = connectCharacteristic(pRemoteService, BLEUUID(customCharacteristics[i].UUID));
     if (!connected){
       pClient->disconnect();
       Serial.println("At least one characteristic UUID not found");
