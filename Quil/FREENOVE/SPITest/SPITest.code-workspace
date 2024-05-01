@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "ODrive Test",
+			"path": "../../../Testing/ODrive Test"
+		},
+		{
+			"name": "Bluetooth Test 2",
+			"path": "../../../Testing/Bluetooth Test 2"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"istream": "cpp",
+			"ostream": "cpp"
+		}
+	}
+}
