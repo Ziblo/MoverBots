@@ -2,13 +2,17 @@
 #include <SPI.h>
 
 // Define which pins we're using
-#define DWM1000_SCK_PIN 13
+// #define DWM1000_SCK_PIN 13
+// #define DWM1000_MISO_PIN 12
+// #define DWM1000_MOSI_PIN 9
+// #define DWM1000_SS_PIN 10
+#define DWM1000_SCK_PIN 14
 #define DWM1000_MISO_PIN 12
-#define DWM1000_MOSI_PIN 11
-#define DWM1000_SS_PIN 10
+#define DWM1000_MOSI_PIN 13
+#define DWM1000_SS_PIN 15
 
 // Define SPI settings
-#define BITORDER SPI_MSBFIRST
+#define BITORDER SPI_LSBFIRST
 #define FREQUENCY 1000000
 #define DATA_MODE SPI_MODE3
 
