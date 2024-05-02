@@ -9,7 +9,7 @@
 
 // Define SPI settings
 #define BITORDER SPI_MSBFIRST
-#define FREQUENCY 3000000
+#define FREQUENCY 1000000
 #define DATA_MODE SPI_MODE3
 
 //helper function prototypes
@@ -26,6 +26,8 @@ void setup() {
   MySPI.setDataMode(DATA_MODE);
   MySPI.setFrequency(FREQUENCY);
 
+  pinMode(MySPI.pinSS(),OUTPUT);
+
   //Initialize serial communication
   Serial.begin(115200);
 }
@@ -33,23 +35,33 @@ void setup() {
 void loop() {
   uint32_t result = DWM1000read(0x00); //read WHO_AM_I
   Serial.println(result);
-  delay(1000);
+  delay(3);
 }
 
 void DWM1000write(uint8_t register_id, uint32_t data){
   register_id = register_id & 0x3F;
   uint8_t header = register_id | 0x80;
+  MySPI.beginTransaction(SPISettings(FREQUENCY, BITORDER, DATA_MODE));
+  digitalWrite(MySPI.pinSS(), LOW);
+  MySPI.transfer(header);
   for (int i=0; i<4; ++i) {
     MySPI.transfer((data >> (i * 8)) & 0xFF);
   }
+  digitalWrite(MySPI.pinSS(), HIGH);
+  MySPI.endTransaction();
 }
 
 uint32_t DWM1000read(uint8_t register_id){
   register_id = register_id & 0x3F;
-  uint8_t header= register_id;
+  uint8_t header = register_id;
+  MySPI.beginTransaction(SPISettings(FREQUENCY, BITORDER, DATA_MODE));
+  digitalWrite(MySPI.pinSS(), LOW);
+  MySPI.transfer(header);
   uint32_t dataIn = 0;
   for(int i=0; i<4; ++i){
     dataIn |= MySPI.transfer((0)) << (i * 8);
   }
+  digitalWrite(MySPI.pinSS(), HIGH);
+  MySPI.endTransaction();
   return dataIn;
 }
