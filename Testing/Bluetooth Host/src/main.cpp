@@ -24,7 +24,7 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
-#include "custom_UUIDs.h"
+#include "Moverbots_BLE_Profile.h"
 
 BLEServer* pServer = NULL;
 BLECharacteristic* pCharacteristics[NUM_OF_CHARACTERISTICS];
@@ -56,13 +56,24 @@ void setup() {
   pServer->setCallbacks(new MyServerCallbacks());
 
   // Create the BLE Service
-  BLEService *pService = pServer->createService(SERVICE_UUID);
+  BLEService *pService = pServer->createService(MASTER_SERVICE_UUID);
 
   // Create all the BLE Characteristics
   for (int i=0; i<NUM_OF_CHARACTERISTICS; i++){
-    pCharacteristics[i] = pService->createCharacteristic(
-                      customCharacteristics[i].UUID,
-                      BLECharacteristic::PROPERTY_NOTIFY);
+    uint32_t properties = 0;
+    switch (customCharacteristics[i].mode){
+      case NOTIFY:
+        properties = BLECharacteristic::PROPERTY_NOTIFY;
+        break;
+      case CALLBACK:
+      case TWO_WAY: //Callback and Two-way both use read and write
+        properties = BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE;
+        break;
+      default:
+        //UNRECOGNISED MODE
+        break;
+    }
+    pCharacteristics[i] = pService->createCharacteristic(customCharacteristics[i].UUID, properties);
   }
 
   // Create all the BLE Descriptors
@@ -81,7 +92,7 @@ void setup() {
 
   // Start advertising
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->addServiceUUID(MASTER_SERVICE_UUID);
   pAdvertising->setScanResponse(true); //needs this to be true to show service uuid in advertisement
   pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
   BLEDevice::startAdvertising();
@@ -117,7 +128,7 @@ void loop() {
         value1 *= 2; //multiply by 2s
         if (!value1) value1 = 1;
         
-        delay(250); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
+        delay(1000); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
     }
     // disconnecting
     if (!deviceConnected && oldDeviceConnected) {

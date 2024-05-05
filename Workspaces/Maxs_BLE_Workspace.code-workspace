@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"name": "Bluetooth Host",
+			"path": "../Testing/Bluetooth Host"
+		},
+		{
+			"name": "Bluetooth Client n",
+			"path": "../Testing/Bluetooth Client n"
+		},
+		{
+			"name": "include",
+			"path": "../include"
+		},
+		{
+			"name": "src",
+			"path": "../src"
+		}
+	],
+	"settings": {}
+}
