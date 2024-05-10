@@ -7,7 +7,7 @@
 
 #include <Arduino.h>
 #include <BLEDevice.h>
-#include "Moverbots_BLE_Profile.h"
+#include "custom_UUIDs.h"
 
 // The remote service we wish to connect to.
 static BLEUUID serviceUUID(MASTER_SERVICE_UUID);

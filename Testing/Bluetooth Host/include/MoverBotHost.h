@@ -1,28 +1,37 @@
 #ifndef MOVERBOTHOST_H
 #define MOVERBOTHOST_H
 
-// Include any necessary headers
 #include <Arduino.h>
+#include <list>
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
 #include "custom_UUIDs.h"
 
-// Class declaration
 class MoverBotHost {
 public:
-    // Constructor
     MoverBotHost();
-
-    // Destructor
     ~MoverBotHost();
 
-    // Declare public member functions
-    
+    BLEService* InitService(const char* serv_uuid, unsigned int num_of_char, const customCharacteristic char_array[]);
+
+    class MyServerCallbacks: public BLEServerCallbacks {
+    public:
+        MyServerCallbacks(MoverBotHost& host);
+        void onConnect(BLEServer* pServer);
+        void onDisconnect(BLEServer* pServer);
+
+    private:
+        MoverBotHost& host;
+    };
 
 private:
-    // Declare private member variables and functions if needed
+    BLEServer* pServer = nullptr;
+    BLECharacteristic* pMasterCharacteristics[NUM_OF_MASTER_CHARACTERISTICS];
+    std::list<BLECharacteristic*> botCharacteristicsList;
+    bool deviceConnected = false;
+    bool oldDeviceConnected = false;
 };
 
-#endif // MOVERBOTHOST_H
+#endif
