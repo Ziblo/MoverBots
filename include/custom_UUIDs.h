@@ -23,9 +23,9 @@ enum CharacteristicMode {
 };
 enum CallbackType {
     NO_CALLBACK,
-    CUSTOM1,
-    CUSTOM2,
+    FLAG_ON_WRITE,
 };
+
 struct customCharacteristic {
     const char* UUID;
     const char* description;
@@ -36,14 +36,13 @@ struct customCharacteristic {
 
 //function prototypes
 std::string BotServiceUUID(uint8_t index); //generate the bot service UUID based on an index from 0 to 255
-BLECharacteristicCallbacks getCallback(CallbackType type);
 
 //Master Characteristics
 #define NUM_OF_MASTER_CHARACTERISTICS 2 //  <----  Don't forget to update this when adding a new one!
 constexpr customCharacteristic MasterCharacteristics[] = {
 //     UUID https://www.uuidgenerator.net/     DESCRIPTION             TYPE      MODE         callback
     {"c96103e0-26e3-4d37-bf08-429f4a1aeba2", "Collective_Heading"   , INTEGER , NOTIFY      , NO_CALLBACK},
-    {"63a588af-acdc-4bd4-a579-574420f90435", "Num_of_Bots"          , INTEGER , PASSIVE     , CUSTOM1},
+    {"63a588af-acdc-4bd4-a579-574420f90435", "Num_of_Bots"          , INTEGER , PASSIVE     , FLAG_ON_WRITE},
 };
 
 //Bot Specific Characteristics

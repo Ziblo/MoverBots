@@ -67,8 +67,10 @@ BLEService* MoverBotHost::InitService(const char* serv_uuid, unsigned int num_of
 
     // Add the callback functions?
     for (int i=0; i<num_of_char; i++){
-        if (char_array[i].callback_type != NO_CALLBACK){
-            pCharacteristics[i]->setCallbacks(getCallback(char_array[i].callback_type));
+        switch (char_array[i].callback_type){
+            case FLAG_ON_WRITE:
+                pCharacteristics[i]->setCallbacks(new CharCallback_Flag_On_Write());
+                break;
         }
     }
 
@@ -86,6 +88,12 @@ void MoverBotHost::MyServerCallbacks::onConnect(BLEServer* pServer) {
 //Callback when a device disconnects
 void MoverBotHost::MyServerCallbacks::onDisconnect(BLEServer* pServer) {
     host.deviceConnected = false;
+}
+//Callback when a characteristic (with callbacks enabled) is written to
+void MoverBotHost::CharCallback_Flag_On_Write::onWrite(BLECharacteristic *pChar) {
+    //do something on write
+    Serial.print("Custom 1 just saw this one: ");
+    Serial.println(pChar->getValue().c_str());
 }
 
 bool MoverBotHost::is_connected(){

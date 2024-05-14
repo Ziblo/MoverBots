@@ -27,6 +27,11 @@ public:
     private:
         MoverBotHost& host;
     };
+    
+    class CharCallback_Flag_On_Write : public BLECharacteristicCallbacks {
+    public:
+        void onWrite(BLECharacteristic *pChar) override;
+    };
 
 private:
     BLEServer* pServer = nullptr;
