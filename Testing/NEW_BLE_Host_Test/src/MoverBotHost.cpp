@@ -43,6 +43,7 @@ BLEService* MoverBotHost::InitService(const char* serv_uuid, unsigned int num_of
                 properties = BLECharacteristic::PROPERTY_NOTIFY;
                 break;
             case CALLBACK:
+            case PASSIVE:
             case TWO_WAY: //Callback and Two-way both use read and write
                 properties = BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE;
                 break;
@@ -63,6 +64,14 @@ BLEService* MoverBotHost::InitService(const char* serv_uuid, unsigned int num_of
         p2902->setNotifications(true);
         pCharacteristics[i]->addDescriptor(p2902);
     }
+
+    // Add the callback functions?
+    for (int i=0; i<num_of_char; i++){
+        if (char_array[i].callback_type != NO_CALLBACK){
+            pCharacteristics[i]->setCallbacks(getCallback(char_array[i].callback_type));
+        }
+    }
+
     return pService;
 }
 
@@ -77,4 +86,8 @@ void MoverBotHost::MyServerCallbacks::onConnect(BLEServer* pServer) {
 //Callback when a device disconnects
 void MoverBotHost::MyServerCallbacks::onDisconnect(BLEServer* pServer) {
     host.deviceConnected = false;
+}
+
+bool MoverBotHost::is_connected(){
+    return deviceConnected;
 }

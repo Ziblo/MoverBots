@@ -57,9 +57,9 @@ void setup() {
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
 
-  /*
+  ///*
   // Create the Master BLE Service
-  BLEService *pService = pServer->createService(MASTER_SERVICE_UUID);
+  BLEService *pMasterService = pServer->createService(MASTER_SERVICE_UUID);
 
   // Create all the BLE Characteristics
   for (int i=0; i<NUM_OF_MASTER_CHARACTERISTICS; i++){
@@ -76,7 +76,7 @@ void setup() {
         //UNRECOGNISED MODE
         break;
     }
-    pCharacteristics[i] = pService->createCharacteristic(MasterCharacteristics[i].UUID, properties);
+    pMasterCharacteristics[i] = pMasterService->createCharacteristic(MasterCharacteristics[i].UUID, properties);
   }
 
   // Create all the BLE Descriptors
@@ -84,14 +84,14 @@ void setup() {
   for (int i=0; i<NUM_OF_MASTER_CHARACTERISTICS; i++){
     pDescriptors[i] = new BLEDescriptor((uint16_t)0x2901); //descriptor for a Client Characteristic Configuration
     pDescriptors[i]->setValue(MasterCharacteristics[i].description);
-    pCharacteristics[i]->addDescriptor(pDescriptors[i]);
+    pMasterCharacteristics[i]->addDescriptor(pDescriptors[i]);
     BLE2902* p2902 = new BLE2902(); //pointer to a generic descriptor for a Client Characteristic Configuration
     p2902->setNotifications(true);
-    pCharacteristics[i]->addDescriptor(p2902);
+    pMasterCharacteristics[i]->addDescriptor(p2902);
   }
-  */
+  //*/
   //Make the Master Service
-  BLEService *pMasterService = InitService(pServer, MASTER_SERVICE_UUID, NUM_OF_MASTER_CHARACTERISTICS, MasterCharacteristics);
+  //BLEService *pMasterService = InitService(pServer, MASTER_SERVICE_UUID, NUM_OF_MASTER_CHARACTERISTICS, MasterCharacteristics);
   
   // Start the service
   pMasterService->start();

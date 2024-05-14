@@ -15,6 +15,10 @@
 		{
 			"name": "src",
 			"path": "../src"
+		},
+		{
+			"name": "NEW_BLE_Host_Test",
+			"path": "../Testing/NEW_BLE_Host_Test"
 		}
 	],
 	"settings": {}
