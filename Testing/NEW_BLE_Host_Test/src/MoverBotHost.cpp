@@ -5,14 +5,19 @@
 MoverBotHost::MoverBotHost(){
     // Create the BLE Device
     BLEDevice::init("ESP32 Host");
-
+    //Init class variables
+    num_of_bots = 0;
+    
     // Create the BLE Server
     pServer = BLEDevice::createServer();
     pServer->setCallbacks(new MyServerCallbacks(*this)); //pass in reference to self
-    BLEService* pMasterService = InitService(MASTER_SERVICE_UUID, NUM_OF_MASTER_CHARACTERISTICS, MasterCharacteristics);
-
+    //create the master service!
+    BLEService* pMasterService = InitService((std::string) MASTER_SERVICE_UUID, NUM_OF_MASTER_CHARACTERISTICS, MasterCharacteristics);
     //Start the Master Service
     pMasterService->start();
+    //Set num of bots
+    BLECharacteristic* pNumOfBotsChar = pMasterService->getCharacteristic(MasterCharacteristics[1].UUID);
+    pNumOfBotsChar->setValue("0"); //set num_of_bots to 0
 
     // Start advertising
     BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
@@ -28,7 +33,7 @@ MoverBotHost::~MoverBotHost(){
 }
 
 //Initialize a BLE service
-BLEService* MoverBotHost::InitService(const char* serv_uuid, unsigned int num_of_char, const customCharacteristic char_array[]){
+BLEService* MoverBotHost::InitService(BLEUUID serv_uuid, unsigned int num_of_char, const customCharacteristic char_array[]){
     // Create the Master BLE Service
     BLEService *pService = pServer->createService(serv_uuid);
     
@@ -44,6 +49,7 @@ BLEService* MoverBotHost::InitService(const char* serv_uuid, unsigned int num_of
                 break;
             case CALLBACK:
             case PASSIVE:
+            case NUM_OF_BOTS:
             case TWO_WAY: //Callback and Two-way both use read and write
                 properties = BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE;
                 break;
@@ -65,11 +71,14 @@ BLEService* MoverBotHost::InitService(const char* serv_uuid, unsigned int num_of
         pCharacteristics[i]->addDescriptor(p2902);
     }
 
-    // Add the callback functions?
+    // Now can add the callback function here if needed
     for (int i=0; i<num_of_char; i++){
-        switch (char_array[i].callback_type){
-            case FLAG_ON_WRITE:
+        switch (char_array[i].mode){
+            case CALLBACK:
                 pCharacteristics[i]->setCallbacks(new CharCallback_Flag_On_Write());
+                break;
+            case NUM_OF_BOTS:
+                pCharacteristics[i]->setCallbacks(new CharCallback_Num_Of_Bots(*this));
                 break;
         }
     }
@@ -89,11 +98,36 @@ void MoverBotHost::MyServerCallbacks::onConnect(BLEServer* pServer) {
 void MoverBotHost::MyServerCallbacks::onDisconnect(BLEServer* pServer) {
     host.deviceConnected = false;
 }
-//Callback when a characteristic (with callbacks enabled) is written to
+//Callback when a characteristic (in CALLBACK mode) is written to
 void MoverBotHost::CharCallback_Flag_On_Write::onWrite(BLECharacteristic *pChar) {
-    //do something on write
-    Serial.print("Custom 1 just saw this one: ");
-    Serial.println(pChar->getValue().c_str());
+    //do something
+}
+//Callback when a num_of_bots changes
+MoverBotHost::CharCallback_Num_Of_Bots::CharCallback_Num_Of_Bots(MoverBotHost& _host) : host(_host) {}
+void MoverBotHost::CharCallback_Num_Of_Bots::onWrite(BLECharacteristic *pChar) {
+    //If there's a new bot, make a new service for it.
+    //If we've lost a bot, stop its service
+    std::string new_num_of_bots_str = pChar->getValue();
+    unsigned int new_num_of_bots = stoi(new_num_of_bots_str);
+    unsigned int old_num_of_bots = host.num_of_bots;
+    if (new_num_of_bots > old_num_of_bots){
+        //for each new bot, add a new service
+        for (int i=old_num_of_bots; i<num_of_bot_services_created; i++){
+            //start services we have already created
+            host.pServer->getServiceByUUID(BotServiceUUID(i))->start();
+        }
+        for (int i=num_of_bot_services_created; i<new_num_of_bots; i++){
+            //init services we haven't created
+            host.InitService(BotServiceUUID(i), NUM_OF_BOT_CHARACTERISTICS, BotCharacteristics);
+            num_of_bot_services_created++;
+        }
+    }else if (new_num_of_bots < old_num_of_bots){
+        //for each bot decommisioned, stop its service
+        for (int i=new_num_of_bots; i<old_num_of_bots; i++){
+            host.pServer->getServiceByUUID(BotServiceUUID(i))->stop();
+        }
+    }
+    host.num_of_bots = new_num_of_bots;
 }
 
 bool MoverBotHost::is_connected(){

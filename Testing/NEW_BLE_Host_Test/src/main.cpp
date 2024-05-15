@@ -13,7 +13,7 @@ bool old_is_connected = false;
 void setup() {
   Serial.begin(115200);
   Serial.println("Creating BLE Host...");
-  pMoverBotHost = new MoverBotHost();
+  pMoverBotHost = new MoverBotHost(); //creates a BLE server and inits master service
   Serial.println("Starting loop...");
 }
 
@@ -23,8 +23,9 @@ void loop() {
     Serial.println("Connecting!");
   }
   if (is_connected) {
-    Serial.println("Still connected!");
-    delay(20);
+    Serial.print("Num of bots: ");
+    Serial.println(pMoverBotHost->num_of_bots);
+    delay(2000);
   }
   // disconnecting
   if (!is_connected && old_is_connected){
