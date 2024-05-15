@@ -118,7 +118,8 @@ void MoverBotHost::CharCallback_Num_Of_Bots::onWrite(BLECharacteristic *pChar) {
         }
         for (int i=num_of_bot_services_created; i<new_num_of_bots; i++){
             //init services we haven't created
-            host.InitService(BotServiceUUID(i), NUM_OF_BOT_CHARACTERISTICS, BotCharacteristics);
+            BLEService* new_service = host.InitService(BotServiceUUID(i), NUM_OF_BOT_CHARACTERISTICS, BotCharacteristics);
+            new_service->start();
             num_of_bot_services_created++;
         }
     }else if (new_num_of_bots < old_num_of_bots){
