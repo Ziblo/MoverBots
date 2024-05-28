@@ -34,27 +34,21 @@ void setup() {
   //initialize SPI pins
   Serial.begin(115200);
   DW1000.begin(IRQ_PIN, RST_PIN);
-  //MySPI.begin(DWM1000_SCK_PIN, DWM1000_MISO_PIN, DWM1000_MOSI_PIN, DWM1000_SS_PIN);
   //initialize SPI settings
   MySPI.setBitOrder(BITORDER);
   MySPI.setDataMode(DATA_MODE);
   MySPI.setFrequency(FREQUENCY);
   
-
-  pinMode(MySPI.pinSS(), OUTPUT);
-
   //DW1000 Config
   myRanging.initCommunication(RST_PIN, DWM1000_SS_PIN, IRQ_PIN);
-  myRanging.attachBlinkDevice(newDevice);
   myRanging.attachNewRange(newRange);
   myRanging.attachNewDevice(newDevice);
   myRanging.attachInactiveDevice(inactiveDevice);
   char tagAddress[] = "7D:00:22:EA:82:60:3B:9C";
-  DW1000Ranging.startAsTag(tagAddress, DW1000.MODE_LONGDATA_RANGE_ACCURACY);
+  DW1000Ranging.startAsTag(tagAddress, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
 }
 
 void loop() {
-  delay(1000);
   myRanging.loop();
 }
 

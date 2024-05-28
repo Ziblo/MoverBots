@@ -120,9 +120,7 @@ void DW1000Class::end()
 
 void DW1000Class::select(uint8_t ss)
 {
-	Serial.printf("SS PIN IS:%i\n", ss);
 	reselect(ss);
-	Serial.printf("SS PIN IS:%i\n", ss);
 	// try locking clock at PLL speed (should be done already,
 	// but just to be sure)
 	enableClock(AUTO_CLOCK);
@@ -131,7 +129,6 @@ void DW1000Class::select(uint8_t ss)
 	if (_rst != 0xff)
 	{
 		// dw1000 data sheet v2.08 §5.6.1 page 20, the RSTn pin should not be driven high but left floating.
-		Serial.printf("RST PIN IS:%i\n", _rst);
 		pinMode(_rst, INPUT);
 	}
 	reset();
@@ -1687,17 +1684,17 @@ void DW1000Class::setDefaults()
 		useSmartPower(false);
 		suppressFrameCheck(false);
 		// for global frame filtering
-		setFrameFilter(false);
-		/* old defaults with active frame filter - better set filter in every script where you really need it
+		//setFrameFilter(true);
+		// old defaults with active frame filter - better set filter in every script where you really need it
 		setFrameFilter(true);
 		//for data frame (poll, poll_ack, range, range report, range failed) filtering
 		setFrameFilterAllowData(true);
 		//for reserved (blink) frame filtering
 		setFrameFilterAllowReserved(true);
-		//setFrameFilterAllowMAC(true);
-		//setFrameFilterAllowBeacon(true);
-		//setFrameFilterAllowAcknowledgement(true);
-		*/
+		setFrameFilterAllowMAC(true);
+		setFrameFilterAllowBeacon(true);
+		setFrameFilterAllowAcknowledgement(true);
+		
 		interruptOnSent(true);
 		interruptOnReceived(true);
 		interruptOnReceiveFailed(true);

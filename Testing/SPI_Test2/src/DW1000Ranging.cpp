@@ -408,6 +408,7 @@ void DW1000RangingClass::loop() {
 			}
 		}
 		else if(_type == TAG) {
+			Serial.printf("ME TAG\n");
 			if(messageType == POLL) {
 				DW1000Time timePollSent;
 				DW1000.getTransmitTimestamp(timePollSent);
