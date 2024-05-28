@@ -10,7 +10,7 @@
 #include "custom_UUIDs.h"
 
 // The remote service we wish to connect to.
-static BLEUUID serviceUUID(SERVICE_UUID);
+static BLEUUID serviceUUID(MASTER_SERVICE_UUID);
 
 static boolean doConnect = false;
 static boolean connected = false;
