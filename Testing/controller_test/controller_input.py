@@ -96,12 +96,13 @@ def pack_joy_data(axis, val: int) -> bytearray:
     # Pack val as a signed 16-bit integer ('<h' for little-endian, signed 16-bit integer)
     packed_val = struct.pack('<h', val)
     # Combine 0xAF, axis_index, packed_val, and 0x0A into a single byte array
+    # print(f"{axis.name} {val}")
     return bytearray([0xAF, axis.index]) + packed_val + bytearray([0x0A])
 
 def send_to_serial(data: bytearray):
     # Send data to the serial port and print the hex representation for debugging.
     ser.write(data)
-    print('Sent data:', ''.join(format(x, '02x') for x in data))
+    # print('Sent data:', ''.join(format(x, '02x') for x in data))
 
 
 def gamepad_event_handler():

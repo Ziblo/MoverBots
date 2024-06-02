@@ -79,27 +79,41 @@ void send_gamepad_event(int id, int data){
       break;
     case 1: //Lx
       analogWrite(PWM_L_X, map(data, -32767, 32767, 0, 255));
+      Serial.print("Left stick X ");
+      Serial.println(data);
       break;
     case 2: //Ly
       analogWrite(PWM_L_Y, map(data, -32767, 32767, 0, 255));
+      Serial.print("Left stick Y ");
+      Serial.println(data);
       break;
     case 3: //Rx
       analogWrite(PWM_R_X, map(data, -32767, 32767, 0, 255));
+      Serial.print("Right stick X ");
+      Serial.println(data);
       break;
     case 4: //Ry
       analogWrite(PWM_R_Y, map(data, -32767, 32767, 0, 255));
+      Serial.print("Right stick Y ");
+      Serial.println(data);
       break;
     case 5: //BTN_NORTH
+      Serial.println(data ? "North Btn DOWN" : "North Btn UP");
       break;
     case 6: //BTN_SOUTH
+      Serial.println(data ? "South Btn DOWN" : "South Btn UP");
       break;
     case 7: //BTN_EAST
+      Serial.println(data ? "East Btn DOWN" : "East Btn UP");
       break;
     case 8: //BTN_WEST
+      Serial.println(data ? "West Btn DOWN" : "West Btn UP");
       break;
     case 9: //BTN_SELECT
+      Serial.println(data ? "Select Btn DOWN" : "Select Btn UP");
       break;
     case 10: //BTN_START
+      Serial.println(data ? "Start Btn DOWN" : "Start Btn UP");
       break;
   }
 }
