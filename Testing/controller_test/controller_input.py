@@ -1,6 +1,7 @@
 from inputs import get_gamepad
 import serial
 import struct
+import threading
 
 class EncodedGamepad:
     def __init__(self):
@@ -100,28 +101,27 @@ def pack_joy_data(axis, val: int) -> bytearray:
 def send_to_serial(data: bytearray):
     # Send data to the serial port and print the hex representation for debugging.
     ser.write(data)
-    # print('Sent data:', ''.join(format(x, '02x') for x in data))
+    print('Sent data:', ''.join(format(x, '02x') for x in data))
 
+
+def gamepad_event_handler():
+    while True:
+        events = get_gamepad()
+        for event in events:
+            if event.ev_type != 'Sync':
+                gp.do_event(event)
 
 if __name__ == '__main__':
     ser = serial.Serial("COM5", 115200)
     gp = EncodedGamepad()
-    # do gamepad stuff
-    while 1:
-        events = get_gamepad()
-        for event in events:
-            # print(event.ev_type, event.code, event.state)
-            if event.ev_type != 'Sync':
-                gp.do_event(event)
-        while ser.in_waiting:
-            print(ser.readline().decode('ascii').strip())
-
-
-'''
-# Read line
-ser = serial.Serial("COM5", 115200)
-while 0:
-    ser.write(bytearray('S','ascii'))
-    bs = ser.readline()
-    print(bs)
-'''
+    
+    # Start a separate thread to handle gamepad events
+    gamepad_thread = threading.Thread(target=gamepad_event_handler, daemon=True)
+    gamepad_thread.start()
+    
+    # Main loop for reading from serial port
+    while True:
+        while ser.in_waiting > 0:
+            line = ser.readline().decode('ascii').strip()
+            if line:  # Check if line is not empty
+                print(line)
