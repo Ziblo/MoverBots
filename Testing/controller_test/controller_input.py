@@ -44,7 +44,7 @@ class JoyAxis:
         #hard coded values
         self.hysterisis_size : int = 1000
         self.deadzone : int = 3000
-        self.maximum : int = 30000
+        self.maximum : int = 32767
         self.name : str = name
     
     def hysterisis_filter(self) -> bool:

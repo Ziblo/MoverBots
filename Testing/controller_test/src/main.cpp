@@ -78,16 +78,16 @@ void send_gamepad_event(int id, int data){
     case 0: //invalid id
       break;
     case 1: //Lx
-      analogWrite(PWM_L_X, map(data, -30000, 30000, 0, 255));
+      analogWrite(PWM_L_X, map(data, -32767, 32767, 0, 255));
       break;
     case 2: //Ly
-      analogWrite(PWM_L_Y, map(data, -30000, 30000, 0, 255));
+      analogWrite(PWM_L_Y, map(data, -32767, 32767, 0, 255));
       break;
     case 3: //Rx
-      analogWrite(PWM_R_X, map(data, -30000, 30000, 0, 255));
+      analogWrite(PWM_R_X, map(data, -32767, 32767, 0, 255));
       break;
     case 4: //Ry
-      analogWrite(PWM_R_Y, map(data, -30000, 30000, 0, 255));
+      analogWrite(PWM_R_Y, map(data, -32767, 32767, 0, 255));
       break;
     case 5: //BTN_NORTH
       break;
