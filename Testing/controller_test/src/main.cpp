@@ -37,7 +37,7 @@ void loop() {
 int get_joy_axis(){
   int joy1 = Serial.read();
   int joy2 = Serial.read();
-  int joy = (joy1 << 8) | joy2;
+  int joy = (joy2 << 8) | joy1;
     // Convert to signed 16-bit integer
     if (joy > 32767) {
         joy -= 65536;
@@ -47,36 +47,33 @@ int get_joy_axis(){
 
 void serial_recieve_callback(){
   digitalWrite(LED_BUILTIN, HIGH);
-  if (Serial.read() != 0xAF){
-    Serial.println("Not 0xAF");
-    return;
-  }
-  Serial.print("0xAF ");
+  //form: 0xAF{id}{state}0A
+  //state can be two bytes if its a joystick event
+  
+  //check for header byte "0xAF"
+  if (Serial.read() != 0xAF) return;
+  //save id
   int id = Serial.read();
-  Serial.print(id, HEX);
-  Serial.print(" ");
+  int data;
   if (id < 5){ //joy id range
     int joy_axis = get_joy_axis();
-    Serial.print(joy_axis, HEX);
+    data = joy_axis;
   }else{ //button id range
     int btn_state = Serial.read();
-    Serial.print(btn_state, HEX);
+    data = btn_state;
   }
-  if (Serial.read() != 0x0A){
-    Serial.println(" No 0x0A at the end.");
-    return;
-  }
-  Serial.println(" 0A");
+  if (Serial.read() != 0x0A) return;
+  
+  //send event to state machine
+  send_gamepad_event(id, data);
+
+  //do it all again if there's still more data
   if (Serial.available() > 0){
     serial_recieve_callback();
   }
 }
 
 void send_gamepad_event(int id, int data){
-  Serial.print(id);
-  Serial.print("-");
-  Serial.println(data);
-  /*
   switch(id){
     case 0: //invalid id
       break;
@@ -104,5 +101,5 @@ void send_gamepad_event(int id, int data){
       break;
     case 10: //BTN_START
       break;
-  }*/
+  }
 }
