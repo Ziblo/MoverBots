@@ -31,3 +31,12 @@ public:
         
     }
 };
+
+StateMachine* create_state_machine(){
+    State* states[] = {
+        new DisarmedState(),
+        new ArmedState(),
+    };
+    StateMachine* state_machine = new StateMachine(states, 1);
+    return state_machine;
+}
