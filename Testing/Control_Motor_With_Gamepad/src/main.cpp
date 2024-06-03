@@ -16,7 +16,7 @@ void setup(){
 }
 
 void loop(){
-  delay(2000);
+  delay(5000);
   Serial.println("beans");
   digitalWrite(LED_BUILTIN, LOW);
 }
