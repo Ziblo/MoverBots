@@ -123,6 +123,6 @@ if __name__ == '__main__':
     # Main loop for reading from serial port
     while True:
         while ser.in_waiting > 0:
-            line = ser.readline().decode('ascii').strip()
+            line = ser.readline().decode('ascii', errors='ignore').strip()
             if line:  # Check if line is not empty
                 print(line)

@@ -1,13 +1,11 @@
 #include "max_gamepad.h"
 #include "MoverBotsOdrive.h"
 
-MaxGamepad::MaxGamepad(MOdrive* pODrive) {
-    p_odrive = pODrive;
-    Serial.begin(115200);
-    Serial.onReceive([this]() { this->serial_receive_callback(); });
+MaxGamepad::MaxGamepad() {
+    Serial.println("Initializing gamepad");
 }
 
-void MaxGamepad::serial_receive_callback() {
+void MaxGamepad::callback() {
     digitalWrite(LED_BUILTIN, HIGH);
 
     // Form: 0xAF{id}{state}0A
@@ -35,7 +33,7 @@ void MaxGamepad::serial_receive_callback() {
 
     // Do it all again if there's still more data
     if (Serial.available() > 0) {
-        serial_receive_callback();
+        callback();
     }
 }
 
@@ -63,7 +61,7 @@ void MaxGamepad::send_gamepad_event(int id, int data) {
         case 2: // Ly
             Serial.print("Left stick Y ");
             Serial.println(data);
-            p_odrive->set_m1_speed(data/3276.7);
+            if (p_odrive) p_odrive->set_m1_speed(data/3276.7);
             break;
         case 3: // Rx
             Serial.print("Right stick X ");
@@ -72,7 +70,7 @@ void MaxGamepad::send_gamepad_event(int id, int data) {
         case 4: // Ry
             Serial.print("Right stick Y ");
             Serial.println(data);
-            p_odrive->set_m2_speed(data/3276.7);
+            if (p_odrive) p_odrive->set_m2_speed(data/3276.7);
             break;
         case 5: // BTN_NORTH
             Serial.println(data ? "North Btn DOWN" : "North Btn UP");
@@ -86,11 +84,16 @@ void MaxGamepad::send_gamepad_event(int id, int data) {
         case 8: // BTN_WEST
             Serial.println(data ? "West Btn DOWN" : "West Btn UP");
             break;
-        case 9: // BTN_SELECT
+        case 9: // BTN_START
+            Serial.println(data ? "Start Btn DOWN" : "Start Btn UP");
+            if (p_odrive && data) p_odrive->Init();
+            break;
+        case 10: // BTN_SELECT
             Serial.println(data ? "Select Btn DOWN" : "Select Btn UP");
             break;
-        case 10: // BTN_START
-            Serial.println(data ? "Start Btn DOWN" : "Start Btn UP");
-            break;
     }
+}
+
+void MaxGamepad::set_odrive(MOdrive* p){
+    p_odrive = p;
 }

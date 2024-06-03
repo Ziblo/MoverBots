@@ -34,13 +34,14 @@ public:
 
 class MOdrive {
 public:
-    HardwareSerial& ser_1 = ODRIVE_SERIAL_1;
-    HardwareSerial& ser_2 = ODRIVE_SERIAL_2;
     int axis_1;
     int axis_2;
     ODriveArduino* o1;
     ODriveArduino* o2;
     MOdrive();
+    ~MOdrive();
+    void Init();
+    bool calibrate(ODriveArduino* o, int axis);
     float get_angle_rad();
     float get_speed();
     float get_angular_speed();
