@@ -1,10 +1,35 @@
 #include "custom_states.h"
+#include <Arduino.h>
 
-// DisarmedState class implementation
-class DisarmedState : public State {
+
+// PairingState class implementation
+class PairingState : public State {
 public:
+    String name = "Pairing";
     void Enter() override {
+        Serial.print("Entering ");
+        Serial.print(name);
+        Serial.println(" State");
+    }
+
+    void OnEvent(Events event) override {
         
+    }
+
+    void Exit() override {
+        Serial.print("Exiting Pairing State");
+    }
+};
+
+
+// ControlState class implementation
+class ControlState : public State {
+public:
+    String name = "Control";
+    void Enter() override {
+        Serial.print("Entering ");
+        Serial.print(name);
+        Serial.println(" State");
     }
 
     void OnEvent(Events event) override {
@@ -16,11 +41,15 @@ public:
     }
 };
 
-// ArmedState class implementation
-class ArmedState : public State {
+
+// FeedbackState class implementation
+class FeedbackState : public State {
 public:
+    String name = "Feedback";
     void Enter() override {
-        
+        Serial.print("Entering ");
+        Serial.print(name);
+        Serial.println(" State");
     }
 
     void OnEvent(Events event) override {
@@ -32,10 +61,13 @@ public:
     }
 };
 
+
+//Init states
 StateMachine* create_state_machine(){
     State* states[] = {
-        new DisarmedState(),
-        new ArmedState(),
+        new PairingState(),
+        new ControlState(),
+        new FeedbackState(),
     };
     StateMachine* state_machine = new StateMachine(states, 1);
     return state_machine;
