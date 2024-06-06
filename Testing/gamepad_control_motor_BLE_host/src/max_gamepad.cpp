@@ -1,5 +1,6 @@
 #include "max_gamepad.h"
 #include "MoverBotsOdrive.h"
+#include "gamepad_enums.h"
 
 MaxGamepad::MaxGamepad() {
     Serial.println("Initializing gamepad");
@@ -54,43 +55,43 @@ void MaxGamepad::send_gamepad_event(int id, int data) {
     switch (id) {
         case 0: // Invalid id
             break;
-        case 1: // Lx
+        case LEFT_STICK_X: // Lx
             Serial.print("Left stick X ");
             Serial.println(data);
             break;
-        case 2: // Ly
+        case LEFT_STICK_Y: // Ly
             Serial.print("Left stick Y ");
             Serial.println(data);
             if (p_odrive) p_odrive->set_m1_speed(VELOCITY_LIMIT*data/32767);
             break;
-        case 3: // Rx
+        case RIGHT_STICK_X: // Rx
             Serial.print("Right stick X ");
             Serial.println(data);
             break;
-        case 4: // Ry
+        case RIGHT_STICK_Y: // Ry
             Serial.print("Right stick Y ");
             Serial.println(data);
             if (p_odrive) p_odrive->set_m2_speed(VELOCITY_LIMIT*data/32767);
             break;
-        case 5: // BTN_NORTH
+        case BTN_NORTH: // BTN_NORTH
             Serial.println(data ? "North Btn DOWN" : "North Btn UP");
             break;
-        case 6: // BTN_SOUTH
+        case BTN_SOUTH: // BTN_SOUTH
             Serial.println(data ? "South Btn DOWN" : "South Btn UP");
             break;
-        case 7: // BTN_EAST
+        case BTN_EAST: // BTN_EAST
             Serial.println(data ? "East Btn DOWN" : "East Btn UP");
             break;
-        case 8: // BTN_WEST
+        case BTN_WEST: // BTN_WEST
             Serial.println(data ? "West Btn DOWN" : "West Btn UP");
             break;
-        case 9: // BTN_START
+        case BTN_START: // BTN_START
             Serial.println(data ? "Start Btn DOWN" : "Start Btn UP");
             if (p_odrive && data) p_odrive->Init();
             break;
-        case 10: // BTN_SELECT
+        case BTN_SELECT: // BTN_SELECT
             Serial.println(data ? "Select Btn DOWN" : "Select Btn UP");
-            if (p_odrive && data) p_odrive->clear_error();
+            if (p_odrive && data) p_odrive->clear_errors();
             break;
     }
 }

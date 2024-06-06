@@ -10,7 +10,7 @@ public:
     MaxGamepad();
     void callback();
     int get_joy_axis();
-    void send_gamepad_event(int id, int data);
+    virtual void send_gamepad_event(int id, int data);
     void set_odrive(MOdrive* p);
 };
 
