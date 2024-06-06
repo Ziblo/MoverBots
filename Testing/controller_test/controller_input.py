@@ -113,7 +113,7 @@ def gamepad_event_handler():
                 gp.do_event(event)
 
 if __name__ == '__main__':
-    ser = serial.Serial("COM5", 115200)
+    ser = serial.Serial("COM8", 115200)
     gp = EncodedGamepad()
     
     # Start a separate thread to handle gamepad events
