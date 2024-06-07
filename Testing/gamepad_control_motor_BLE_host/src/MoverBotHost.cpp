@@ -4,19 +4,18 @@
 //Constructor Definitiion
 MoverBotHost::MoverBotHost(){
     // Create the BLE Device
-    BLEDevice::init("ESP32 Host");
-
+    BLEDevice::init("MoverBot Host");
     // Create the BLE Server
     pServer = BLEDevice::createServer();
     pServer->setCallbacks(new MyServerCallbacks(*this)); //pass in reference to self
-    BLEService* pMasterService = InitService(MASTER_SERVICE_UUID, NUM_OF_MASTER_CHARACTERISTICS, MasterCharacteristics);
-
+    //create the master service!
+    BLEService* pMoverBotService = InitService((std::string) SERVICE_UUID, NUM_OF_CHARACTERISTICS, MoverBotCharacteristics);
     //Start the Master Service
-    pMasterService->start();
+    pMoverBotService->start();
 
     // Start advertising
     BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->addServiceUUID(MASTER_SERVICE_UUID);
+    pAdvertising->addServiceUUID(SERVICE_UUID);
     pAdvertising->setScanResponse(true); //needs this to be true to show service uuid in advertisement
     pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
     BLEDevice::startAdvertising();
@@ -28,7 +27,7 @@ MoverBotHost::~MoverBotHost(){
 }
 
 //Initialize a BLE service
-BLEService* MoverBotHost::InitService(const char* serv_uuid, unsigned int num_of_char, const customCharacteristic char_array[]){
+BLEService* MoverBotHost::InitService(BLEUUID serv_uuid, unsigned int num_of_char, const customCharacteristic char_array[]){
     // Create the Master BLE Service
     BLEService *pService = pServer->createService(serv_uuid);
     
@@ -43,6 +42,8 @@ BLEService* MoverBotHost::InitService(const char* serv_uuid, unsigned int num_of
                 properties = BLECharacteristic::PROPERTY_NOTIFY;
                 break;
             case CALLBACK:
+            case PASSIVE:
+            case NUM_OF_BOTS:
             case TWO_WAY: //Callback and Two-way both use read and write
                 properties = BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE;
                 break;
@@ -63,6 +64,18 @@ BLEService* MoverBotHost::InitService(const char* serv_uuid, unsigned int num_of
         p2902->setNotifications(true);
         pCharacteristics[i]->addDescriptor(p2902);
     }
+
+    // Now can add the callback function here if needed
+    for (int i=0; i<num_of_char; i++){
+        switch (char_array[i].mode){
+            case CALLBACK:
+                pCharacteristics[i]->setCallbacks(new CharCallback_Flag_On_Write());
+                break;
+            case NUM_OF_BOTS:
+                pCharacteristics[i]->setCallbacks(new CharCallback_Num_Of_Bots(*this));
+                break;
+        }
+    }
     return pService;
 }
 
@@ -77,4 +90,17 @@ void MoverBotHost::MyServerCallbacks::onConnect(BLEServer* pServer) {
 //Callback when a device disconnects
 void MoverBotHost::MyServerCallbacks::onDisconnect(BLEServer* pServer) {
     host.deviceConnected = false;
+}
+//Callback when a characteristic (in CALLBACK mode) is written to
+void MoverBotHost::CharCallback_Flag_On_Write::onWrite(BLECharacteristic *pChar) {
+    //do something
+}
+//Callback when a num_of_bots changes?
+MoverBotHost::CharCallback_Num_Of_Bots::CharCallback_Num_Of_Bots(MoverBotHost& _host) : host(_host) {}
+void MoverBotHost::CharCallback_Num_Of_Bots::onWrite(BLECharacteristic *pChar) {
+    //do something with host (host.is_connected() etc)
+}
+
+bool MoverBotHost::is_connected(){
+    return deviceConnected;
 }

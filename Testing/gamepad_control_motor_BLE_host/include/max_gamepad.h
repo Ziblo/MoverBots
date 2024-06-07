@@ -6,12 +6,10 @@
 
 class MaxGamepad {
 public:
-    MOdrive* p_odrive = nullptr;
     MaxGamepad();
     void callback();
     int get_joy_axis();
-    virtual void send_gamepad_event(int id, int data);
-    void set_odrive(MOdrive* p);
+    virtual void send_gamepad_event(int id, int data) = 0;
 };
 
 #endif // MAX_GAMEPAD_H

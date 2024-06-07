@@ -51,51 +51,47 @@ int MaxGamepad::get_joy_axis() {
     return joy;
 }
 
-void MaxGamepad::send_gamepad_event(int id, int data) {
-    switch (id) {
-        case 0: // Invalid id
-            break;
-        case LEFT_STICK_X: // Lx
-            Serial.print("Left stick X ");
-            Serial.println(data);
-            break;
-        case LEFT_STICK_Y: // Ly
-            Serial.print("Left stick Y ");
-            Serial.println(data);
-            if (p_odrive) p_odrive->set_m1_speed(VELOCITY_LIMIT*data/32767);
-            break;
-        case RIGHT_STICK_X: // Rx
-            Serial.print("Right stick X ");
-            Serial.println(data);
-            break;
-        case RIGHT_STICK_Y: // Ry
-            Serial.print("Right stick Y ");
-            Serial.println(data);
-            if (p_odrive) p_odrive->set_m2_speed(VELOCITY_LIMIT*data/32767);
-            break;
-        case BTN_NORTH: // BTN_NORTH
-            Serial.println(data ? "North Btn DOWN" : "North Btn UP");
-            break;
-        case BTN_SOUTH: // BTN_SOUTH
-            Serial.println(data ? "South Btn DOWN" : "South Btn UP");
-            break;
-        case BTN_EAST: // BTN_EAST
-            Serial.println(data ? "East Btn DOWN" : "East Btn UP");
-            break;
-        case BTN_WEST: // BTN_WEST
-            Serial.println(data ? "West Btn DOWN" : "West Btn UP");
-            break;
-        case BTN_START: // BTN_START
-            Serial.println(data ? "Start Btn DOWN" : "Start Btn UP");
-            if (p_odrive && data) p_odrive->Init();
-            break;
-        case BTN_SELECT: // BTN_SELECT
-            Serial.println(data ? "Select Btn DOWN" : "Select Btn UP");
-            if (p_odrive && data) p_odrive->clear_errors();
-            break;
-    }
-}
-
-void MaxGamepad::set_odrive(MOdrive* p){
-    p_odrive = p;
-}
+// void send_gamepad_event(int id, int data){
+//     switch (id){
+//     case LEFT_STICK_X:
+//       Serial.print("Left Stick X: ");
+//       Serial.println(data);
+//       break;
+//     case LEFT_STICK_Y:
+//       Serial.print("Left Stick Y: ");
+//       Serial.println(data);
+//       break;
+//     case RIGHT_STICK_X:
+//       Serial.print("Right Stick X: ");
+//       Serial.println(data);
+//       break;
+//     case RIGHT_STICK_Y:
+//       Serial.print("Right Stick Y: ");
+//       Serial.println(data);
+//       break;
+//     case BTN_NORTH:
+//       Serial.print("North Btn: ");
+//       Serial.println(data ? "DOWN" : "UP");
+//       break;
+//     case BTN_SOUTH:
+//       Serial.print("South Btn: ");
+//       Serial.println(data ? "DOWN" : "UP");
+//       break;
+//     case BTN_EAST:
+//       Serial.print("East Btn: ");
+//       Serial.println(data ? "DOWN" : "UP");
+//       break;
+//     case BTN_WEST:
+//       Serial.print("West Btn: ");
+//       Serial.println(data ? "DOWN" : "UP");
+//       break;
+//     case BTN_START:
+//       Serial.print("Start Btn: ");
+//       Serial.println(data ? "DOWN" : "UP");
+//       break;
+//     case BTN_SELECT:
+//       Serial.print("Select Btn: ");
+//       Serial.println(data ? "DOWN" : "UP");
+//       break;
+//   }
+// }
