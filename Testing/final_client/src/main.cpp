@@ -42,11 +42,11 @@ static void notifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, ui
     return;
   }
   //print info
-  Serial.print("Notify callback for characteristic ");
-  Serial.print(MoverBotCharacteristics[i].description);
-  Serial.print(" of data length ");
-  Serial.print(length);
-  Serial.print(" Data: ");
+  // Serial.print("Notify callback for characteristic ");
+  // Serial.print(MoverBotCharacteristics[i].description);
+  // Serial.print(" of data length ");
+  // Serial.print(length);
+  // Serial.print(" Data: ");
   static int id;
   int value;
   switch (i){
@@ -62,7 +62,7 @@ static void notifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, ui
     default: //pBLERemoteCharacteristic doesn't match my characteristicUUIDs
       break;
   }
-  PrintCharacteristic(pData, length, MoverBotCharacteristics[i].type);
+  //PrintCharacteristic(pData, length, MoverBotCharacteristics[i].type);
 }
 
 int getCharData(uint8_t* pData, size_t length, CharacteristicType dataType){
@@ -180,9 +180,7 @@ bool connectCharacteristic(BLERemoteService* pRemoteService, BLEUUID local_chara
   return true;
 }
 
-/**
- * Scan for BLE servers and find the first one that advertises the service we are looking for.
- */
+// Scan for BLE servers and find the first one that advertises the service we are looking for.
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
  /**
    * Called for each advertising BLE server.
@@ -209,6 +207,7 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
 }; // MyAdvertisedDeviceCallbacks
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(115200);
   Serial.println("Starting Arduino BLE Client application...");
   BLEDevice::init("");
@@ -239,17 +238,22 @@ void loop() {
     }
     doConnect = false;
   }
-
   // If we are connected to a peer BLE Server, update the characteristic each time we are reached
   // with the current time since boot.
   if (connected) {
-    String newValue = "Time since boot: " + String(millis()/1000);
+    digitalWrite(LED_BUILTIN, HIGH);
+    // String newValue = "Time since boot: " + String(millis()/1000);
     // Serial.println("Setting new characteristic value to \"" + newValue + "\"");
     
     // Set the characteristic's value to be the array of bytes that is actually a string.
     // pRemoteCharacteristic->writeValue(newValue.c_str(), newValue.length());
   }else if(doScan){
     BLEDevice::getScan()->start(0);  // this is just example to start scan after disconnect, most likely there is better way to do it in arduino
+    digitalWrite(LED_BUILTIN, LOW);
+  }else{ //disconnected
+    digitalWrite(LED_BUILTIN, LOW);
+    swerve_drive.set_m1_speed(0);
+    swerve_drive.set_m2_speed(0);
   }
   
   delay(1000); // Delay a second between loops.
@@ -264,6 +268,7 @@ void sendGamepadInput(int id, int data){
     case LEFT_STICK_Y:
       Serial.print("Left Stick Y: ");
       Serial.println(data);
+      swerve_drive.set_m1_speed(VELOCITY_LIMIT*data/32767);
       break;
     case RIGHT_STICK_X:
       Serial.print("Right Stick X: ");
@@ -272,6 +277,7 @@ void sendGamepadInput(int id, int data){
     case RIGHT_STICK_Y:
       Serial.print("Right Stick Y: ");
       Serial.println(data);
+      swerve_drive.set_m2_speed(VELOCITY_LIMIT*data/32767);
       break;
     case BTN_NORTH:
       Serial.print("North Btn: ");

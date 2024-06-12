@@ -9,6 +9,7 @@ public:
     MaxGamepad();
     void callback();
     int get_joy_axis();
+    int is_Joy_id(int id);
     virtual void send_gamepad_event(int id, int data) = 0;
 };
 

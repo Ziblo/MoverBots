@@ -2,11 +2,11 @@
 #include "MoverBotsOdrive.h"
 #include "gamepad_enums.h"
 
-MaxGamepad::MaxGamepad() {
+MaxGamepad::MaxGamepad(){
     Serial.println("Initializing gamepad");
 }
 
-void MaxGamepad::callback() {
+void MaxGamepad::callback(){
     digitalWrite(LED_BUILTIN, HIGH);
 
     // Form: 0xAF{id}{state}0A
@@ -38,7 +38,7 @@ void MaxGamepad::callback() {
     }
 }
 
-int MaxGamepad::get_joy_axis() {
+int MaxGamepad::get_joy_axis(){
     int joy1 = Serial.read();
     int joy2 = Serial.read();
     int joy = (joy2 << 8) | joy1;
@@ -49,6 +49,17 @@ int MaxGamepad::get_joy_axis() {
     }
 
     return joy;
+}
+
+int MaxGamepad::is_Joy_id(int id){
+    switch (id){
+        case LEFT_STICK_X:
+        case LEFT_STICK_Y:
+        case RIGHT_STICK_X:
+        case RIGHT_STICK_Y:
+            return true;
+    }
+    return false;
 }
 
 // void send_gamepad_event(int id, int data){

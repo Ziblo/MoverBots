@@ -7,6 +7,28 @@
 #include <BLEUtils.h>
 #include <BLE2902.h>
 #include "custom_UUIDs.h"
+#include <queue>
+
+//Classes
+class GamepadEvent{
+public:
+  int id;
+  int data;
+  GamepadEvent(int id, int data){
+    id = id;
+    data = data;
+  }
+  int is_Joy_id(){
+    switch (id){
+      case LEFT_STICK_X:
+      case LEFT_STICK_Y:
+      case RIGHT_STICK_X:
+      case RIGHT_STICK_Y:
+        return true;
+    }
+    return false;
+  }
+};
 
 //Class overrides
 class SMGamepad : public MaxGamepad{
@@ -19,6 +41,7 @@ void serial_recieve_callback();
 
 //global variables
 SMGamepad gamepad;
+std::queue<GamepadEvent*> gamepad_queue;
 
 //BLE Host code
 BLEServer* pServer = NULL;
@@ -34,7 +57,6 @@ class MyServerCallbacks: public BLEServerCallbacks {
     };
 
     void onDisconnect(BLEServer* pServer) {
-      Serial.println("Disconnect in callback!");
       deviceConnected = false;
     }
 };
@@ -46,21 +68,26 @@ void setup(){
   Serial.onReceive(serial_recieve_callback);
   Serial.println("Creating BLE Host...");
   // Create the BLE Device
-  BLEDevice::init("ESP32 Host");
+  BLEDevice::init("MoverBotsHost");
 
+  Serial.println("Creating BLE Server...");
   // Create the BLE Server
   pServer = BLEDevice::createServer();
+  Serial.println("Setting Server Callbacks...");
   pServer->setCallbacks(new MyServerCallbacks());
 
+  Serial.println("Creating BLE Service...");
   // Create the BLE Service
-  BLEService *pMyService = pServer->createService(SERVICE_UUID);
+  BLEService *pService = pServer->createService(SERVICE_UUID);
 
+  Serial.println("Creating BLE Characteristics...");
   // Create all the BLE Characteristics
   for (int i=0; i<NUM_OF_CHARACTERISTICS; i++){
     uint32_t properties = 0;
     switch (MoverBotCharacteristics[i].mode){
       case NOTIFY:
         properties = BLECharacteristic::PROPERTY_NOTIFY;
+        Serial.println("Set Notify");
         break;
       case CALLBACK:
         properties = BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE;
@@ -72,9 +99,10 @@ void setup(){
         //UNRECOGNISED MODE
         break;
     }
-    pCharacteristics[i] = pMyService->createCharacteristic(MoverBotCharacteristics[i].UUID, properties);
+    pCharacteristics[i] = pService->createCharacteristic(MoverBotCharacteristics[i].UUID, properties);
   }
 
+  Serial.println("Adding Descriptors...");
   // Create all the BLE Descriptors
   BLEDescriptor* pDescriptors[NUM_OF_CHARACTERISTICS]; //Characteristic User Descriptions
   for (int i=0; i<NUM_OF_CHARACTERISTICS; i++){
@@ -86,9 +114,11 @@ void setup(){
     pCharacteristics[i]->addDescriptor(p2902);
   }
   
+  Serial.println("Starting Service...");
   // Start the service
-  pMyService->start();
+  pService->start();
 
+  Serial.println("Starting Advertisement...");
   // Start advertising
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
@@ -100,35 +130,42 @@ void setup(){
 
 //LOOP
 void loop() {
-    // notify gamepad events to client
-    if (deviceConnected && !oldDeviceConnected){
-      digitalWrite(LED_BUILTIN, HIGH);
-      Serial.println("Connecting!");
+  // notify gamepad events to client
+  if (deviceConnected && !oldDeviceConnected){
+    digitalWrite(LED_BUILTIN, HIGH);
+    Serial.println("Connecting!");
+  }
+  if (deviceConnected) {
+    //update the characteristics
+    if (!gamepad_queue.empty()){
+      GamepadEvent* gp_e = new GamepadEvent(gamepad_queue.front()[0], gamepad_queue.front()[1]);
+      gamepad_queue.pop();
+      while ((gamepad_queue.front()->id == gp_e->id) && (gamepad_queue.front()->is_Joy_id())){
+        //Front has same ID and are both Joystick events
+        //Joystick can be overridden by a more recent value
+        gp_e = gamepad_queue.front();
+        gamepad_queue.pop();
+      }
+      pCharacteristics[0]->setValue(gp_e->id);
+      pCharacteristics[0]->notify();
+      pCharacteristics[1]->setValue(gp_e->data);
+      pCharacteristics[1]->notify();
     }
-    if (deviceConnected) {
-      // //update the characteristics
-      // Serial.println("Sending gamepad event!");
-      // pCharacteristics[0]->setValue(num_of_bots);
-      // pCharacteristics[0]->notify();
-      // Serial.print("sending in characteristic 0: ");
-      // Serial.println(num_of_bots);
-
-      // pCharacteristics[1]->setValue(Collective_Heading);
-      // pCharacteristics[1]->notify();
-      // Serial.print("sending in characteristic 1: ");
-      // Serial.println(Collective_Heading);
-      Serial.println("Still Connected.");
-      delay(1000); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
+    delay(5); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
+  }
+  // disconnecting
+  if (!deviceConnected && oldDeviceConnected) {
+    //clear gamepad_queue
+    while (!gamepad_queue.empty()) {
+      gamepad_queue.pop();
     }
-    // disconnecting
-    if (!deviceConnected && oldDeviceConnected) {
-      digitalWrite(LED_BUILTIN, LOW);
-      Serial.println("Disconnecting!");
-      delay(500); // give the bluetooth stack the chance to get things ready
-      pServer->startAdvertising(); // restart advertising
-      Serial.println("start advertising");
-      oldDeviceConnected = deviceConnected;
-    }
+    digitalWrite(LED_BUILTIN, LOW);
+    Serial.println("Disconnecting!");
+    delay(500); // give the bluetooth stack the chance to get things ready
+    pServer->startAdvertising(); // restart advertising
+    Serial.println("start advertising");
+  }
+  oldDeviceConnected = deviceConnected;
 }
 
 //On serial recieve
@@ -138,10 +175,19 @@ void serial_recieve_callback(){
 
 //Override for gamepad event (called from gamepad.callback())
 void SMGamepad::send_gamepad_event(int id, int data){
-  pCharacteristics[0]->setValue(id);
-  pCharacteristics[0]->notify();
-  pCharacteristics[1]->setValue(data);
-  pCharacteristics[1]->notify();
+  if (deviceConnected){
+    Serial.print("Queueing Gamepad Event: (");
+    Serial.print(id);
+    Serial.print(", ");
+    Serial.print(data);
+    Serial.println(")");
+    // int* gp_e = new int[2]{id, data};
+    // gamepad_queue.push(gp_e);
+    GamepadEvent* gp_e = new GamepadEvent(id, data);
+    gamepad_queue.push(gp_e);
+  }else{
+    Serial.println("Unable to send gamepad event; no devices connected.");
+  }
   /*switch (id){
     case LEFT_STICK_X:
       Serial.print("Left Stick X: ");

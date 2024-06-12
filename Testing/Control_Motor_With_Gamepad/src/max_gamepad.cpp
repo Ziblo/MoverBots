@@ -90,7 +90,7 @@ void MaxGamepad::send_gamepad_event(int id, int data) {
             break;
         case 10: // BTN_SELECT
             Serial.println(data ? "Select Btn DOWN" : "Select Btn UP");
-            if (p_odrive && data) p_odrive->clear_error();
+            if (p_odrive && data) p_odrive->clear_errors();
             break;
     }
 }
