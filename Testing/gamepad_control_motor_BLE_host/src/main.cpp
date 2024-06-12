@@ -7,7 +7,6 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
-#include "MoverBotHost.h"
 #include "custom_UUIDs.h"
 
 //Class overrides
@@ -22,21 +21,8 @@ void serial_recieve_callback();
 //global variables
 MOdrive swerve_drive;
 SMGamepad gamepad;
-MoverBotHost* pMoverBotHost;
-bool old_is_connected = false;
 
-//Characteristics
-BLECharacteristic* gamepad_characteristic;
-
-
-
-#include <Arduino.h>
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
-#include "custom_UUIDs.h"
-
+//BLE Host code
 BLEServer* pServer = NULL;
 BLECharacteristic* pCharacteristics[NUM_OF_CHARACTERISTICS];
 bool deviceConnected = false;
@@ -55,11 +41,12 @@ class MyServerCallbacks: public BLEServerCallbacks {
     }
 };
 
-
-
-void setup() {
+//SETUP
+void setup(){  
+  pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(115200);
-
+  Serial.onReceive(serial_recieve_callback);
+  Serial.println("Creating BLE Host...");
   // Create the BLE Device
   BLEDevice::init("ESP32 Host");
 
@@ -67,9 +54,8 @@ void setup() {
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
 
-  ///*
-  // Create the Master BLE Service
-  BLEService *pMasterService = pServer->createService(SERVICE_UUID);
+  // Create the BLE Service
+  BLEService *pMyService = pServer->createService(SERVICE_UUID);
 
   // Create all the BLE Characteristics
   for (int i=0; i<NUM_OF_CHARACTERISTICS; i++){
@@ -79,6 +65,8 @@ void setup() {
         properties = BLECharacteristic::PROPERTY_NOTIFY;
         break;
       case CALLBACK:
+        properties = BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE;
+        break;
       case TWO_WAY: //Callback and Two-way both use read and write
         properties = BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE;
         break;
@@ -86,7 +74,7 @@ void setup() {
         //UNRECOGNISED MODE
         break;
     }
-    pCharacteristics[i] = pMasterService->createCharacteristic(MoverBotCharacteristics[i].UUID, properties);
+    pCharacteristics[i] = pMyService->createCharacteristic(MoverBotCharacteristics[i].UUID, properties);
   }
 
   // Create all the BLE Descriptors
@@ -99,12 +87,9 @@ void setup() {
     p2902->setNotifications(true);
     pCharacteristics[i]->addDescriptor(p2902);
   }
-  //*/
-  //Make the Master Service
-  //BLEService *pMasterService = InitService(pServer, SERVICE_UUID, NUM_OF_CHARACTERISTICS, MoverBotCharacteristics);
   
   // Start the service
-  pMasterService->start();
+  pMyService->start();
 
   // Start advertising
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
@@ -115,79 +100,37 @@ void setup() {
   Serial.println("Waiting a client connection to notify...");
 }
 
+//LOOP
 void loop() {
-    // notify changed value
-    static uint32_t Collective_Heading = 5;
-    static uint32_t num_of_bots = 0;
+    // notify gamepad events to client
+    if (deviceConnected && !oldDeviceConnected){
+      digitalWrite(LED_BUILTIN, HIGH);
+      Serial.println("Connecting!");
+    }
     if (deviceConnected) {
-        //update the characteristics
-        Serial.println("Sending characteristics!");
-        pCharacteristics[0]->setValue(num_of_bots);
-        pCharacteristics[0]->notify();
-        Serial.print("sending in characteristic 0: ");
-        Serial.println(num_of_bots);
+      // //update the characteristics
+      // Serial.println("Sending gamepad event!");
+      // pCharacteristics[0]->setValue(num_of_bots);
+      // pCharacteristics[0]->notify();
+      // Serial.print("sending in characteristic 0: ");
+      // Serial.println(num_of_bots);
 
-        pCharacteristics[1]->setValue(Collective_Heading);
-        pCharacteristics[1]->notify();
-        Serial.print("sending in characteristic 1: ");
-        Serial.println(Collective_Heading);
-
-        Collective_Heading += 1; //count by 1s
-        num_of_bots -=1;
-
-        delay(1000); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
+      // pCharacteristics[1]->setValue(Collective_Heading);
+      // pCharacteristics[1]->notify();
+      // Serial.print("sending in characteristic 1: ");
+      // Serial.println(Collective_Heading);
+      Serial.println("Still Connected.");
+      delay(1000); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
     }
     // disconnecting
     if (!deviceConnected && oldDeviceConnected) {
-        delay(500); // give the bluetooth stack the chance to get things ready
-        pServer->startAdvertising(); // restart advertising
-        Serial.println("start advertising");
-        oldDeviceConnected = deviceConnected;
+      digitalWrite(LED_BUILTIN, LOW);
+      Serial.println("Disconnecting!");
+      delay(500); // give the bluetooth stack the chance to get things ready
+      pServer->startAdvertising(); // restart advertising
+      Serial.println("start advertising");
+      oldDeviceConnected = deviceConnected;
     }
-}
-
-
-
-
-
-
-
-
-//SETUP
-void setup(){  
-  pinMode(LED_BUILTIN, OUTPUT);
-  Serial.begin(115200);
-  Serial.onReceive(serial_recieve_callback);
-  Serial.println("Creating BLE Host...");
-  pMoverBotHost = new MoverBotHost(); //creates a BLE server and inits master service
-  Serial.println("BLE Host created");
-  gamepad_characteristic = pMoverBotHost->GetCharacteristic(0);
-}
-
-//LOOP
-void loop(){
-  //Check BLE is connection status
-  bool is_connected = pMoverBotHost->is_connected();
-  int i;
-  // connecting
-  if (is_connected && !old_is_connected){
-    digitalWrite(LED_BUILTIN, HIGH);
-    Serial.println("Connecting!");
-    i = 0;
-  }
-  if (is_connected) {
-    i++;
-    Serial.println("Still Connected!");
-    delay(2000);
-    gamepad_characteristic->setValue(i);
-    gamepad_characteristic->notify();
-  }
-  // disconnecting
-  if (!is_connected && old_is_connected){
-    digitalWrite(LED_BUILTIN, LOW);
-    Serial.println("Disconnecting!");
-  }
-  old_is_connected = is_connected;
 }
 
 //On serial recieve
@@ -197,7 +140,11 @@ void serial_recieve_callback(){
 
 //Override for gamepad event (called from gamepad.callback())
 void SMGamepad::send_gamepad_event(int id, int data){
-  switch (id){
+  pCharacteristics[0]->setValue(id);
+  pCharacteristics[0]->notify();
+  pCharacteristics[1]->setValue(data);
+  pCharacteristics[1]->notify();
+  /*switch (id){
     case LEFT_STICK_X:
       Serial.print("Left Stick X: ");
       Serial.println(data);
@@ -240,5 +187,5 @@ void SMGamepad::send_gamepad_event(int id, int data){
       Serial.println(data ? "DOWN" : "UP");
       if (data) swerve_drive.clear_errors();
       break;
-  }
+  }*/
 }
