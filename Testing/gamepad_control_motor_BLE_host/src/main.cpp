@@ -1,5 +1,4 @@
 //includes
-#include "MoverBotsODrive.h"
 #include "max_gamepad.h"
 #include "gamepad_enums.h"
 //Bluetooth includes
@@ -19,7 +18,6 @@ public:
 void serial_recieve_callback();
 
 //global variables
-MOdrive swerve_drive;
 SMGamepad gamepad;
 
 //BLE Host code
