@@ -34,11 +34,11 @@ public:
   bool updateFlag;
   JoyEvent(int id, int data) : GamepadEvent(id, data), updateFlag(false) {}
   void clear(){
-    data = 0;
+    GamepadEvent::data = 0;
     updateFlag = false; //?
   }
   void update(int data){
-    data = data;
+    GamepadEvent::data = data;
     updateFlag = true;
   }
 };
@@ -50,6 +50,7 @@ public:
   JoyEvent Rx;
   JoyEvent Ry;
   std::queue<GamepadEvent*> btn_queue;
+  GamepadQueues() : Lx(LEFT_STICK_X, 0), Ly(LEFT_STICK_Y, 0), Rx(RIGHT_STICK_X, 0), Ry(RIGHT_STICK_Y, 0) {}
   void clear_all(){
     Lx.clear();
     Ly.clear();
@@ -76,34 +77,56 @@ public:
         break;
     }
   }
+  bool empty() const {
+    bool has_val = false;
+    has_val |= Lx.updateFlag;
+    has_val |= Ly.updateFlag;
+    has_val |= Rx.updateFlag;
+    has_val |= Ry.updateFlag;
+    has_val |= !btn_queue.empty();
+    return !has_val;
+  }
   GamepadEvent* pop(){
     static int index = 0;
-    GamepadEvent* out;
-    switch (index){
-      case 0:
-        out = &Lx;
-        Lx.clear();
-        break;
-      case 1:
-        out = &Ly;
-        Ly.clear();
-        break;
-      case 2:
-        out = &Rx;
-        Rx.clear();
-        break;
-      case 3:
-        out = &Ry;
-        Ry.clear();
-        break;
-      case 4:
-      case 5:
-        //btn gets two chances
-        out = btn_queue.front();
-        btn_queue.pop();
-        break;
+    GamepadEvent* out = nullptr;
+    while (!out){
+      switch (index){
+        case 0:
+          if (Lx.updateFlag) {
+            out = &Lx;
+            Lx.updateFlag = false;
+          }
+          break;
+        case 1:
+          if (Ly.updateFlag) {
+            out = &Ly;
+            Ly.updateFlag = false;
+          }
+          break;
+        case 2:
+          if (Rx.updateFlag) {
+            out = &Rx;
+            Rx.updateFlag = false;
+          }
+          break;
+        case 3:
+          if (Ry.updateFlag) {
+            out = &Ry;
+            Ry.updateFlag = false;
+          }
+          break;
+        case 4:
+        case 5:
+          //btn gets two chances
+          if (!btn_queue.empty()){
+            out = btn_queue.front();
+            btn_queue.pop();
+          }
+          break;
+      }
+      index = (index+1)%6;
     }
-    index = (index+1)%6;
+    return out;
   }
 };
 
@@ -214,38 +237,40 @@ void loop() {
   }
   if (deviceConnected) {
     //update the characteristics
-    if (!joy_queue.empty()){
-      GamepadEvent* gp_e = joy_queue.front();
-      joy_queue.pop();
-      while (!joy_queue.empty() && (joy_queue.front()->id == gp_e->id)){
-        gp_e = joy_queue.front();
-        joy_queue.pop();
-      }
+    if (!gamepad_queues.empty()){
+      GamepadEvent* gp_e = gamepad_queues.pop();
       pCharacteristics[0]->setValue(gp_e->id);
       pCharacteristics[0]->notify();
       pCharacteristics[1]->setValue(gp_e->data);
       pCharacteristics[1]->notify();
     }
-    delay(5);
-    if(!btn_queue.empty()){
-      GamepadEvent* gp_e = btn_queue.front();
-      btn_queue.pop();
-      pCharacteristics[0]->setValue(gp_e->id);
-      pCharacteristics[0]->notify();
-      pCharacteristics[1]->setValue(gp_e->data);
-      pCharacteristics[1]->notify();
-    }
+    // if (!joy_queue.empty()){
+    //   GamepadEvent* gp_e = joy_queue.front();
+    //   joy_queue.pop();
+    //   while (!joy_queue.empty() && (joy_queue.front()->id == gp_e->id)){
+    //     gp_e = joy_queue.front();
+    //     joy_queue.pop();
+    //   }
+    //   pCharacteristics[0]->setValue(gp_e->id);
+    //   pCharacteristics[0]->notify();
+    //   pCharacteristics[1]->setValue(gp_e->data);
+    //   pCharacteristics[1]->notify();
+    // }
+    // delay(5);
+    // if(!btn_queue.empty()){
+    //   GamepadEvent* gp_e = btn_queue.front();
+    //   btn_queue.pop();
+    //   pCharacteristics[0]->setValue(gp_e->id);
+    //   pCharacteristics[0]->notify();
+    //   pCharacteristics[1]->setValue(gp_e->data);
+    //   pCharacteristics[1]->notify();
+    // }
     delay(5); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
   }
   // disconnecting
   if (!deviceConnected && oldDeviceConnected) {
     //clear gamepad_queues
-    while (!joy_queue.empty()) {
-      joy_queue.pop();
-    }
-    while (!btn_queue.empty()) {
-      btn_queue.pop();
-    }
+    gamepad_queues.clear_all();
     digitalWrite(LED_BUILTIN, LOW);
     Serial.println("Disconnecting!");
     delay(500); // give the bluetooth stack the chance to get things ready
@@ -269,12 +294,13 @@ void SMGamepad::send_gamepad_event(int id, int data){
     Serial.print(data);
     Serial.println(")");
     // int* gp_e = new int[2]{id, data};
-    GamepadEvent* gp_e = new GamepadEvent(id, data);
-    if (gp_e->is_Joy_id()){
-      joy_queue.push(gp_e);
-    }else{
-      btn_queue.push(gp_e);
-    }
+    // GamepadEvent* gp_e = new GamepadEvent(id, data);
+    gamepad_queues.push(id, data);
+    // if (gp_e->is_Joy_id()){
+    //   joy_queue.push(gp_e);
+    // }else{
+    //   btn_queue.push(gp_e);
+    // }
   }else{
     Serial.println("Unable to send gamepad event; no devices connected.");
   }
