@@ -9,6 +9,104 @@
 #include "custom_UUIDs.h"
 #include <queue>
 
+  // bool is_Joy_id() const{
+  //   switch (id){
+  //     case LEFT_STICK_X:
+  //     case LEFT_STICK_Y:
+  //     case RIGHT_STICK_X:
+  //     case RIGHT_STICK_Y:
+  //       return true;
+  //   }
+  //   return false;
+  // }
+
+
+//Classes
+class GamepadEvent{
+public:
+  int id;
+  int data;
+  GamepadEvent(int id, int data) : id(id), data(data) {}
+};
+
+class JoyEvent : public GamepadEvent{
+public:
+  bool updateFlag;
+  JoyEvent(int id, int data) : GamepadEvent(id, data), updateFlag(false) {}
+  void clear(){
+    data = 0;
+    updateFlag = false; //?
+  }
+  void update(int data){
+    data = data;
+    updateFlag = true;
+  }
+};
+
+class GamepadQueues{
+public:
+  JoyEvent Lx;
+  JoyEvent Ly;
+  JoyEvent Rx;
+  JoyEvent Ry;
+  std::queue<GamepadEvent*> btn_queue;
+  void clear_all(){
+    Lx.clear();
+    Ly.clear();
+    Rx.clear();
+    Ry.clear();
+    while(!btn_queue.empty()) btn_queue.pop();
+  }
+  void push(int id, int data){
+    switch (id){
+      case LEFT_STICK_X:
+        Lx.update(data);
+        break;
+      case LEFT_STICK_Y:
+        Ly.update(data);
+        break;
+      case RIGHT_STICK_X:
+        Rx.update(data);
+        break;
+      case RIGHT_STICK_Y:
+        Ry.update(data);
+        break;
+      default: //btn event
+        btn_queue.push(new GamepadEvent(id, data));
+        break;
+    }
+  }
+  GamepadEvent* pop(){
+    static int index = 0;
+    GamepadEvent* out;
+    switch (index){
+      case 0:
+        out = &Lx;
+        Lx.clear();
+        break;
+      case 1:
+        out = &Ly;
+        Ly.clear();
+        break;
+      case 2:
+        out = &Rx;
+        Rx.clear();
+        break;
+      case 3:
+        out = &Ry;
+        Ry.clear();
+        break;
+      case 4:
+      case 5:
+        //btn gets two chances
+        out = btn_queue.front();
+        btn_queue.pop();
+        break;
+    }
+    index = (index+1)%6;
+  }
+};
+
 //Class overrides
 class SMGamepad : public MaxGamepad{
 public:
@@ -20,7 +118,7 @@ void serial_recieve_callback();
 
 //global variables
 SMGamepad gamepad;
-std::queue<int*> gamepad_queue;
+GamepadQueues gamepad_queues;
 
 //BLE Host code
 BLEServer* pServer = NULL;
@@ -116,27 +214,37 @@ void loop() {
   }
   if (deviceConnected) {
     //update the characteristics
-    if (!gamepad_queue.empty()){
-      int* gp_e = gamepad_queue.front();
-      gamepad_queue.pop();
-      // while ((gamepad_queue.front()[0] == gp_e[0]) && gamepad.is_Joy_id(gamepad_queue.front()[0])){
-      //   //Front has same ID and are both Joystick events
-      //   //Joystick can be overridden by a more recent value
-      //   gp_e = gamepad_queue.front();
-      //   gamepad_queue.pop();
-      // }
-      pCharacteristics[0]->setValue(gp_e[0]);
+    if (!joy_queue.empty()){
+      GamepadEvent* gp_e = joy_queue.front();
+      joy_queue.pop();
+      while (!joy_queue.empty() && (joy_queue.front()->id == gp_e->id)){
+        gp_e = joy_queue.front();
+        joy_queue.pop();
+      }
+      pCharacteristics[0]->setValue(gp_e->id);
       pCharacteristics[0]->notify();
-      pCharacteristics[1]->setValue(gp_e[1]);
+      pCharacteristics[1]->setValue(gp_e->data);
+      pCharacteristics[1]->notify();
+    }
+    delay(5);
+    if(!btn_queue.empty()){
+      GamepadEvent* gp_e = btn_queue.front();
+      btn_queue.pop();
+      pCharacteristics[0]->setValue(gp_e->id);
+      pCharacteristics[0]->notify();
+      pCharacteristics[1]->setValue(gp_e->data);
       pCharacteristics[1]->notify();
     }
     delay(5); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
   }
   // disconnecting
   if (!deviceConnected && oldDeviceConnected) {
-    //clear gamepad_queue
-    while (!gamepad_queue.empty()) {
-      gamepad_queue.pop();
+    //clear gamepad_queues
+    while (!joy_queue.empty()) {
+      joy_queue.pop();
+    }
+    while (!btn_queue.empty()) {
+      btn_queue.pop();
     }
     digitalWrite(LED_BUILTIN, LOW);
     Serial.println("Disconnecting!");
@@ -160,53 +268,14 @@ void SMGamepad::send_gamepad_event(int id, int data){
     Serial.print(", ");
     Serial.print(data);
     Serial.println(")");
-    int* gp_e = new int[2]{id, data};
-    gamepad_queue.push(gp_e);
+    // int* gp_e = new int[2]{id, data};
+    GamepadEvent* gp_e = new GamepadEvent(id, data);
+    if (gp_e->is_Joy_id()){
+      joy_queue.push(gp_e);
+    }else{
+      btn_queue.push(gp_e);
+    }
   }else{
     Serial.println("Unable to send gamepad event; no devices connected.");
   }
-  /*switch (id){
-    case LEFT_STICK_X:
-      Serial.print("Left Stick X: ");
-      Serial.println(data);
-      break;
-    case LEFT_STICK_Y:
-      Serial.print("Left Stick Y: ");
-      Serial.println(data);
-      break;
-    case RIGHT_STICK_X:
-      Serial.print("Right Stick X: ");
-      Serial.println(data);
-      break;
-    case RIGHT_STICK_Y:
-      Serial.print("Right Stick Y: ");
-      Serial.println(data);
-      break;
-    case BTN_NORTH:
-      Serial.print("North Btn: ");
-      Serial.println(data ? "DOWN" : "UP");
-      break;
-    case BTN_SOUTH:
-      Serial.print("South Btn: ");
-      Serial.println(data ? "DOWN" : "UP");
-      break;
-    case BTN_EAST:
-      Serial.print("East Btn: ");
-      Serial.println(data ? "DOWN" : "UP");
-      break;
-    case BTN_WEST:
-      Serial.print("West Btn: ");
-      Serial.println(data ? "DOWN" : "UP");
-      break;
-    case BTN_START:
-      Serial.print("Start Btn: ");
-      Serial.println(data ? "DOWN" : "UP");
-      if (data) swerve_drive.Init();
-      break;
-    case BTN_SELECT:
-      Serial.print("Select Btn: ");
-      Serial.println(data ? "DOWN" : "UP");
-      if (data) swerve_drive.clear_errors();
-      break;
-  }*/
 }
