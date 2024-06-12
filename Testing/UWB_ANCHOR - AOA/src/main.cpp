@@ -2,6 +2,7 @@
 // #include <SPI.h>
 // #include <DW1000.h>
 // #include "DW1000Ranging.h"
+// #include <math.h>
 
 
 // // Define which pins we're using
@@ -15,25 +16,44 @@
 // // Define SPI settings
 // #define BITORDER SPI_MSBFIRST
 // #define FREQUENCY 1000000
-// #define DATA_MODE SPI_MODE3
+// #define DATA_MODE SPI_MODE2
 
 // //helper function prototypes
 // uint32_t DWM1000read(uint8_t header);
 // void DWM1000write(uint8_t header);
 // void newRange();
-// void newDevice(DW1000Device *device);
 // void newBlink(DW1000Device* device);
 // void inactiveDevice(DW1000Device* device);
+// void reception();
+// void triangulatePosition(double &x, double &y);
+// void calculatePosition();
+// double calculateAoA(double x, double y);
 
 // SPIClass MySPI;
 // DW1000Class myDW1000;
 // DW1000RangingClass myRanging;
+// DW1000Time myTiming;
 
+// struct Measurement {
+//   double x;
+//   double y;
+//   double distance;
+// };
+
+// // Example known positions where the tag will be placed
+// Measurement measurements[] = {
+//     {1.0, 0.0, 0.0}, // Position 1
+//     {0.0, 1.0, 0.0}  // Position 2
+// };
+
+// int currentMeasurement = 0;
 
 // void setup() {
-//   //initialize SPI pins
 //   Serial.begin(115200);
+//   delay(1000);
+//   //initialize SPI pins
 //   DW1000.begin(IRQ_PIN, RST_PIN);
+  
 //   //initialize SPI settings
 //   MySPI.setBitOrder(BITORDER);
 //   MySPI.setDataMode(DATA_MODE);
@@ -42,17 +62,16 @@
 //   //DW1000 Config
 //   myRanging.initCommunication(RST_PIN, DWM1000_SS_PIN, IRQ_PIN);
 //   myRanging.attachNewRange(newRange);
-//   myRanging.attachNewDevice(newDevice);
+//   myRanging.attachBlinkDevice(newBlink);
+//   myRanging.attachNewRange(newRange);
 //   myRanging.attachInactiveDevice(inactiveDevice);
-//   char tagAddress[] = "7D:00:22:EA:82:60:3B:9C";
-//   DW1000Ranging.startAsTag(tagAddress, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
-// }
 
+//   char anchorAddress[] = "83:17:5B:D5:A9:9A:E2:9C";
+//   DW1000Ranging.startAsAnchor(anchorAddress, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
+// }
+ 
 // void loop() {
-//   //myRanging.loop();
-//   uint32_t result = DWM1000read(0x00); //read WHO_AM_I
-//   Serial.printf("result: 0x%x\n", result);
-//   delay(1000);
+//     myRanging.loop();
 // }
 
 // void DWM1000write(uint8_t register_id, uint32_t data){
@@ -100,9 +119,7 @@
 //   Serial.println(device->getShortAddress(), HEX);
 // }
 
-// void newDevice(DW1000Device *device)
-// {
-//     Serial.print("ranging init; 1 device added ! -> ");
-//     Serial.print(" short:");
-//     Serial.println(device->getShortAddress(), HEX);
-// }
+
+
+
+
