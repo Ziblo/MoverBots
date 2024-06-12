@@ -9,27 +9,6 @@
 #include "custom_UUIDs.h"
 #include <queue>
 
-//Classes
-class GamepadEvent{
-public:
-  int id;
-  int data;
-  GamepadEvent(int id, int data){
-    id = id;
-    data = data;
-  }
-  int is_Joy_id(){
-    switch (id){
-      case LEFT_STICK_X:
-      case LEFT_STICK_Y:
-      case RIGHT_STICK_X:
-      case RIGHT_STICK_Y:
-        return true;
-    }
-    return false;
-  }
-};
-
 //Class overrides
 class SMGamepad : public MaxGamepad{
 public:
@@ -41,7 +20,7 @@ void serial_recieve_callback();
 
 //global variables
 SMGamepad gamepad;
-std::queue<GamepadEvent*> gamepad_queue;
+std::queue<int*> gamepad_queue;
 
 //BLE Host code
 BLEServer* pServer = NULL;
@@ -138,17 +117,17 @@ void loop() {
   if (deviceConnected) {
     //update the characteristics
     if (!gamepad_queue.empty()){
-      GamepadEvent* gp_e = new GamepadEvent(gamepad_queue.front()[0], gamepad_queue.front()[1]);
+      int* gp_e = gamepad_queue.front();
       gamepad_queue.pop();
-      while ((gamepad_queue.front()->id == gp_e->id) && (gamepad_queue.front()->is_Joy_id())){
-        //Front has same ID and are both Joystick events
-        //Joystick can be overridden by a more recent value
-        gp_e = gamepad_queue.front();
-        gamepad_queue.pop();
-      }
-      pCharacteristics[0]->setValue(gp_e->id);
+      // while ((gamepad_queue.front()[0] == gp_e[0]) && gamepad.is_Joy_id(gamepad_queue.front()[0])){
+      //   //Front has same ID and are both Joystick events
+      //   //Joystick can be overridden by a more recent value
+      //   gp_e = gamepad_queue.front();
+      //   gamepad_queue.pop();
+      // }
+      pCharacteristics[0]->setValue(gp_e[0]);
       pCharacteristics[0]->notify();
-      pCharacteristics[1]->setValue(gp_e->data);
+      pCharacteristics[1]->setValue(gp_e[1]);
       pCharacteristics[1]->notify();
     }
     delay(5); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
@@ -181,9 +160,7 @@ void SMGamepad::send_gamepad_event(int id, int data){
     Serial.print(", ");
     Serial.print(data);
     Serial.println(")");
-    // int* gp_e = new int[2]{id, data};
-    // gamepad_queue.push(gp_e);
-    GamepadEvent* gp_e = new GamepadEvent(id, data);
+    int* gp_e = new int[2]{id, data};
     gamepad_queue.push(gp_e);
   }else{
     Serial.println("Unable to send gamepad event; no devices connected.");
