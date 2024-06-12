@@ -5,15 +5,20 @@
 MoverBotHost::MoverBotHost(){
     // Create the BLE Device
     BLEDevice::init("MoverBot Host");
+    Serial.println("Starting MoverBot Host BLE Server...");
     // Create the BLE Server
     pServer = BLEDevice::createServer();
+    Serial.println("Setting Server Callbacks...");
     pServer->setCallbacks(new MyServerCallbacks(*this)); //pass in reference to self
-    //create the master service!
-    BLEService* pMoverBotService = InitService((std::string) SERVICE_UUID, NUM_OF_CHARACTERISTICS, MoverBotCharacteristics);
+    //create the service!
+    Serial.println("Initializing Service...");
+    BLEService* pMoverBotService = InitService(BLEUUID(SERVICE_UUID), NUM_OF_CHARACTERISTICS, MoverBotCharacteristics);
     //Start the Master Service
+    Serial.println("Starting Service...");
     pMoverBotService->start();
 
     // Start advertising
+    Serial.println("Start Advertising...");
     BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
     pAdvertising->addServiceUUID(SERVICE_UUID);
     pAdvertising->setScanResponse(true); //needs this to be true to show service uuid in advertisement
@@ -26,14 +31,20 @@ MoverBotHost::~MoverBotHost(){
     //clean up resources if needed
 }
 
+BLECharacteristic* MoverBotHost::GetCharacteristic(int index){
+    return pCharacteristics[index];
+}
+
 //Initialize a BLE service
 BLEService* MoverBotHost::InitService(BLEUUID serv_uuid, unsigned int num_of_char, const customCharacteristic char_array[]){
     // Create the Master BLE Service
+    Serial.println("Creating Service...");
     BLEService *pService = pServer->createService(serv_uuid);
     
     //make pointers for the characteristics
     BLECharacteristic* pCharacteristics[num_of_char];
 
+    Serial.println("Creating Characteristics...");
     // Create all the BLE Characteristics
     for (int i=0; i<num_of_char; i++){
         uint32_t properties = 0;
@@ -54,6 +65,7 @@ BLEService* MoverBotHost::InitService(BLEUUID serv_uuid, unsigned int num_of_cha
         pCharacteristics[i] = pService->createCharacteristic(char_array[i].UUID, properties);
     }
 
+    Serial.println("Adding Descriptors...");
     // Create all the BLE Descriptors
     BLEDescriptor* pDescriptors[num_of_char]; //Characteristic User Descriptions
     for (int i=0; i<num_of_char; i++){
@@ -65,6 +77,7 @@ BLEService* MoverBotHost::InitService(BLEUUID serv_uuid, unsigned int num_of_cha
         pCharacteristics[i]->addDescriptor(p2902);
     }
 
+    Serial.println("Adding Callbacks...");
     // Now can add the callback function here if needed
     for (int i=0; i<num_of_char; i++){
         switch (char_array[i].mode){

@@ -13,6 +13,8 @@ class MoverBotHost {
 public:
     MoverBotHost();
     ~MoverBotHost();
+    
+    BLECharacteristic* GetCharacteristic(int index);
 
     BLEService* InitService(BLEUUID serv_uuid, unsigned int num_of_char, const customCharacteristic char_array[]);
 
@@ -45,7 +47,7 @@ public:
 
 private:
     BLEServer* pServer = nullptr;
-    BLECharacteristic* pMasterCharacteristics[NUM_OF_CHARACTERISTICS];
+    BLECharacteristic* pCharacteristics[NUM_OF_CHARACTERISTICS];
     std::list<BLECharacteristic*> botCharacteristicsList;
     bool deviceConnected = false;
 };

@@ -5,13 +5,14 @@
 #include <array>
 
 //Macros
-#define SERVICE_UUID "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
+#define SERVICE_UUID "8845e8ec-6a6b-43f9-a08b-a30d7c0f9d22"
 
 //Enums
 enum CharacteristicType {
     INTEGER,
     STRING,
     UWB_DATA,
+    GAMEPAD_EVENT,
 };
 enum CharacteristicMode {
     NOTIFY,     //Host sends updates to the client
@@ -31,13 +32,13 @@ struct customCharacteristic {
 };
 
 //Bot Specific Characteristics
-#define NUM_OF_CHARACTERISTICS 4 //  <----  Don't forget to update this when adding a new one!
+#define NUM_OF_CHARACTERISTICS 1 //  <----  Don't forget to update this when adding a new one!
 constexpr customCharacteristic MoverBotCharacteristics[] = {
 //     UUID https://www.uuidgenerator.net/     DESCRIPTION             TYPE      MODE
-    {"beb5483e-36e1-4688-b7f5-ea07361b26a8", "Battery_Level"        , INTEGER , CALLBACK},
-    {"f716693d-9321-4544-8952-5ba1ec9daad9", "UWB_Readings"         , UWB_DATA, PASSIVE},
-    {"ceef0256-6a0a-4850-a48e-619d79be55fc", "dummy_data"           , STRING  , NOTIFY},
-    {"8287d75f-a642-4fb9-9136-9e1f443eace9", "Read/Writeable"       , INTEGER , NOTIFY},
+    {"e3a47b8f-171f-4761-8032-731f4395eb06", "Gamepad_Input_Event", GAMEPAD_EVENT, NOTIFY},
+    // {"f716693d-9321-4544-8952-5ba1ec9daad9", "UWB_Readings"         , INTEGER , NOTIFY},
+    // {"ceef0256-6a0a-4850-a48e-619d79be55fc", "dummy_data"           , INTEGER , NOTIFY},
+    // {"8287d75f-a642-4fb9-9136-9e1f443eace9", "Read/Writeable"       , INTEGER , NOTIFY},
 };
 
 #endif // CUSTOM_UUIDS_H
