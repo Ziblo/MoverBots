@@ -32,6 +32,12 @@ void ODriveConfig::motor_config_current_lim(float limit) {
 void ODriveConfig::clear_errors() {
     *p_ser << "w axis" << ax << ".error " << 0 << '\n';
 }
+void ODriveConfig::brake_resistor_config_enable(bool is_enabled) {
+    *p_ser << "w axis" << ax << ".BrakeResistorConfig.enable " << is_enabled << '\n';
+}
+void ODriveConfig::set_max_regen_current(float max_current) {
+    *p_ser << "w axis" << ax << ".config.max_regen_current " << max_current << '\n';
+}
 
 MOdrive::MOdrive(){
     axis_1 = ODRIVE_AXIS_1;
@@ -58,9 +64,13 @@ void MOdrive::Init(){
     config2.controller_config_enable_vel_limit(true);
     config1.controller_config_vel_limit(VELOCITY_LIMIT);
     config2.controller_config_vel_limit(VELOCITY_LIMIT);
+    config1.brake_resistor_config_enable(false);
+    config2.brake_resistor_config_enable(false);
+    // config1.set_max_regen_current();
+    // config1.set_max_regen_current();
     //Calibrate
     if (!calibrate(o1, axis_1)) Serial << "Failed to calibrate ODrive 1.\n";
-    // if (!calibrate(o2, axis_2)) Serial << "Failed to calibrate ODrive 2.\n";
+    if (!calibrate(o2, axis_2)) Serial << "Failed to calibrate ODrive 2.\n";
 }
 
 bool MOdrive::calibrate(ODriveArduino* o, int axis){

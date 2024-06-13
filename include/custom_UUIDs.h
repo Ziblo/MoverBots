@@ -32,12 +32,12 @@ struct customCharacteristic {
 };
 
 //Bot Specific Characteristics
-#define NUM_OF_CHARACTERISTICS 2 //  <----  Don't forget to update this when adding a new one!
+#define NUM_OF_CHARACTERISTICS 3 //  <----  Don't forget to update this when adding a new one!
 constexpr customCharacteristic MoverBotCharacteristics[] = {
 //     UUID https://www.uuidgenerator.net/     DESCRIPTION                TYPE      MODE
     {"e3a47b8f-171f-4761-8032-731f4395eb06", "Gamepad_Input_ID"        , INTEGER , NOTIFY},
     {"f716693d-9321-4544-8952-5ba1ec9daad9", "Gamepad_Input_Data"      , INTEGER , NOTIFY},
-    // {"ceef0256-6a0a-4850-a48e-619d79be55fc", "dummy_data"           , INTEGER , NOTIFY},
+    {"ceef0256-6a0a-4850-a48e-619d79be55fc", "debug_callback"          , STRING  , CALLBACK},
     // {"8287d75f-a642-4fb9-9136-9e1f443eace9", "Read/Writeable"       , INTEGER , NOTIFY},
 };
 

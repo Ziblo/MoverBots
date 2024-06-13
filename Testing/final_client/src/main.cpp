@@ -10,6 +10,22 @@
 #include "custom_UUIDs.h"
 #include "gamepad_enums.h"
 #include "MoverBotsODrive.h"
+template <typename T>
+class DebugPrint{
+public:
+  std::string s;
+  DebugPrint(){
+    s = "";
+  }
+  void print(const T& arg){
+    String str = String(arg);
+    //print this to characteristic
+  }
+  void println(const T& arg){
+    String str = "Bot: " + String(arg) + "\n";
+    //print this to characteristic
+  }
+};
 
 //Glbal variables
 MOdrive swerve_drive;
@@ -208,6 +224,7 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
   Serial.begin(115200);
   Serial.println("Starting Arduino BLE Client application...");
   BLEDevice::init("");
@@ -277,7 +294,7 @@ void sendGamepadInput(int id, int data){
     case RIGHT_STICK_Y:
       Serial.print("Right Stick Y: ");
       Serial.println(data);
-      swerve_drive.set_m2_speed(VELOCITY_LIMIT*data/32767);
+      swerve_drive.set_m2_speed(-VELOCITY_LIMIT*data/32767);
       break;
     case BTN_NORTH:
       Serial.print("North Btn: ");

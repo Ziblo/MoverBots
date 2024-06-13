@@ -12,7 +12,7 @@
 #define GEAR_RATIO 15 //I don't know that it's 15. This is a tentative value PLEASE UPDATE
 #define WHEEL_RATIO 1 //wheel spins per one side full rotation
 #define WHEEL_RADIUS 0.2
-#define VELOCITY_LIMIT 100
+#define VELOCITY_LIMIT 3
 
 // Printing with stream operator helper functions
 template<class T> inline Print& operator <<(Print &obj,     T arg) { obj.print(arg);    return obj; }
@@ -32,6 +32,8 @@ public:
     void controller_config_vel_integrator_limit(float limit);
     void motor_config_current_lim(float limit);
     void clear_errors();
+    void brake_resistor_config_enable(bool is_enabled);
+    void set_max_regen_current(float max_current);
 };
 
 class MOdrive {

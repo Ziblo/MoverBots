@@ -161,9 +161,22 @@ class MyServerCallbacks: public BLEServerCallbacks {
     }
 };
 
+class MyDebugCallback : public BLECharacteristicCallbacks {
+public:
+    void onWrite(BLECharacteristic *pChar) override;
+};
+
+void MyDebugCallback::onWrite(BLECharacteristic *pChar){
+  //debug_print
+  std::string str = pChar->getValue();
+  Serial.print("Bot: ");
+  Serial.println(str.c_str());
+}
+
 //SETUP
 void setup(){  
   pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
   Serial.begin(115200);
   Serial.onReceive(serial_recieve_callback);
   Serial.println("Creating BLE Host...");
@@ -213,6 +226,16 @@ void setup(){
     p2902->setNotifications(true);
     pCharacteristics[i]->addDescriptor(p2902);
   }
+
+  Serial.println("Adding Callbacks...");
+    // Now can add the callback function here if needed
+    for (int i=0; i<NUM_OF_CHARACTERISTICS; i++){
+      switch (MoverBotCharacteristics[i].mode){
+          case CALLBACK:
+            pCharacteristics[i]->setCallbacks(new MyDebugCallback());
+            break;
+      }
+    }
   
   Serial.println("Starting Service...");
   // Start the service
